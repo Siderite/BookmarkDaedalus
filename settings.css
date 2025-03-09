@@ -1,0 +1,30 @@
+#ulSettings, #ulAdvSettings {
+	list-style:none;
+}
+#ulSettings li, #ulAdvSettings li {
+	margin-bottom:5px;
+}
+#divShortcuts {
+	display:none;
+}
+#divShortcutsFirefox {
+	display:none;
+}
+#divShortcutsChrome {
+	display:none;
+}
+#divShortcutsOpera {
+	display:none;
+}
+#divSettings, #divInfo, #divAdvSettings {
+	min-height:400px;
+}
+#txtCustomUrlComparison {
+	width:300px;
+	height:160px;
+}
+#txtCustomUrlComparisonInvalid {
+	color:red;
+	visibility:hidden;
+	line-height:0;
+}
