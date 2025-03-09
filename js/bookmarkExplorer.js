@@ -276,7 +276,7 @@
                             self.api.setTitle(currentTab.id, `${data.path} : ${data.index + 1}/${data.length}`);
                         } else {
                             self.api.setBadge(currentTab.id, '');
-                            self.api.setTitle(currentTab.id, 'Siderite\'s Bookmark Explorer');
+                            self.api.setTitle(currentTab.id, 'Bookmark Surfer Daedalus');
                         }
                         if (settings.preloadNext && data && data.next) {
                             self.preload(currentTab.id, data.next.url);

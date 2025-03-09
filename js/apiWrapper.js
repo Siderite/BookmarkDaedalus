@@ -387,7 +387,7 @@
                 };
                 const notifOpts = {
                     type: "basic",
-                    title: (options.title || "Siderite's Bookmark Explorer"),
+                    title: (options.title || "Bookmark Surfer Daedalus"),
                     message: (options.message || ''),
                     iconUrl: "images/bigIcon.png"
                 };
