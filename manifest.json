@@ -1,0 +1,69 @@
+{
+	"manifest_version": 3,
+
+	"name": "Bookmark Surfer Daedalus",
+	"description": "Easily manage browser bookmarks and navigate through them with keyboard or mouse",
+	"version": "1.0.0",
+
+	"permissions": [
+		"tabs",
+		"activeTab",
+		"bookmarks",
+		"contextMenus",
+		"notifications",
+		"storage",
+		"unlimitedStorage"
+	],
+
+	"host_permissions": [
+		"<all_urls>"
+	],
+
+	"action": {
+		"default_icon": {
+			"19": "icon.png"
+		},
+		"default_popup": "popup.html"
+	},
+
+	"background": {
+		"service_worker": "background.js"
+	},
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["apiWrapper.js","content.js"]
+    }
+  ],
+
+	"options_ui": {
+		"page": "settings.html",
+		"open_in_tab": true
+	},
+
+	"commands": {
+		"prevBookmark": {
+			"suggested_key": {
+				"default": "Ctrl+Shift+K"
+			},
+			"description": "Navigate to previous bookmark in the folder"
+		},
+		"nextBookmark": {
+			"suggested_key": {
+				"default": "Ctrl+Shift+L"
+			},
+			"description": "Navigate to next bookmark in the folder"
+		},
+		"skipBookmark": {
+			"description": "Skip this bookmark in its folder"
+		},
+		"manage": {
+			"description": "Open manage window"
+		}
+	},
+
+	"icons": {
+		"16": "icon.png",
+		"128": "bigIcon.png"
+	}
+}
