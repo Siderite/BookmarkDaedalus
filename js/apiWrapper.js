@@ -389,7 +389,7 @@
                     type: "basic",
                     title: (options.title || "Siderite's Bookmark Explorer"),
                     message: (options.message || ''),
-                    iconUrl: "bigIcon.png"
+                    iconUrl: "images/bigIcon.png"
                 };
                 if (!browser.isFirefox) {
                     notifOpts.requireInteraction = !!options.requireInteraction;

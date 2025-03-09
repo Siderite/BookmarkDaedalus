@@ -21,23 +21,23 @@
 
 	"action": {
 		"default_icon": {
-			"19": "icon.png"
+			"19": "images/icon.png"
 		},
-		"default_popup": "popup.html"
+		"default_popup": "html/popup.html"
 	},
 
 	"background": {
-		"service_worker": "background.js"
+		"service_worker": "js/background.js"
 	},
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["apiWrapper.js","content.js"]
+      "js": ["js/apiWrapper.js","js/content.js"]
     }
   ],
 
 	"options_ui": {
-		"page": "settings.html",
+		"page": "html/settings.html",
 		"open_in_tab": true
 	},
 
@@ -63,7 +63,7 @@
 	},
 
 	"icons": {
-		"16": "icon.png",
-		"128": "bigIcon.png"
+		"16": "images/icon.png",
+		"128": "images/bigIcon.png"
 	}
 }
