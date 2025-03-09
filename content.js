@@ -8,9 +8,10 @@
     api.onMessage(data=>{
       switch (data?.action || data) {
         case 'preload':
-            const preloadFrameId = 'ifrPreload';
-            const preloadLinkId = 'lnkPreload';
-            const url = data.url;
+          const preloadFrameId = 'ifrPreload';
+          const preloadLinkId = 'lnkPreload';
+          const url = data.url;
+          try {
             let fr = document.getElementById(preloadFrameId);
             if (!fr) {
                 fr = document.createElement('iframe');
@@ -29,6 +30,9 @@
                 document.body.appendChild(frl);
             }
             frl.setAttribute('href', url);
+          } catch(e) {
+            console.debug('Error preloading:',url);
+          }
           break;
         case 'confirm':
             return new Promise((resolve)=>resolve(confirm(data.message)));

@@ -496,7 +496,7 @@
                 manageContext: typeof(settings.manageContext) == 'undefined' ? false : !!settings.manageContext,
                 readLaterContext: typeof(settings.readLaterContext) == 'undefined' ? true : !!settings.readLaterContext,
                 readLaterFolderName: settings.readLaterFolderName || 'Read Later',
-                readLaterPageTimeout: +(settings.readLaterPageTimeout) || 30000,
+                readLaterPageTimeout: +(settings.readLaterPageTimeout) || 10000,
                 storeAllDeletedBookmarks: typeof(settings.storeAllDeletedBookmarks) == 'undefined' ? true : !!settings.storeAllDeletedBookmarks,
                 daysAutoClearDeleted: +(settings.daysAutoClearDeleted) || 0,
                 enableBookmarkPage: typeof(settings.enableBookmarkPage) == 'undefined' ? false : !!settings.enableBookmarkPage,
@@ -990,7 +990,7 @@
                     }
                     arr.bookmarks.forEach(obj => {
                         let i = 0;
-                        while (i < obj.bookmarks.length) {
+                        while (i < obj.bookmarks?.length || 0) {
                             if (ids.includes(obj.bookmarks[i].id)) {
                                 obj.bookmarks.splice(i, 1);
                             } else {
@@ -998,7 +998,7 @@
                             }
                         }
                     });
-                    arr.bookmarks = arr.bookmarks.filter(obj => !!obj.bookmarks.length);
+                    arr.bookmarks = arr.bookmarks.filter(obj => !!obj.bookmarks?.length);
                     self.setData(self.deletedBookmarksKey, arr).then(resolve);
                 });
             });

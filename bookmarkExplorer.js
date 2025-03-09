@@ -321,45 +321,43 @@
             const self = this;
             const data = {
                 url,
-                title: null
+                title: url
             };
-            self.api.newTab(url, true).then(tab => {
+            self.addReadLaterBookmark(data, folderName).then(bm=>{
+              self.api.newTab(url, true).then(tab => {
                 self.api.getSettings().then(settings => {
                     let tm = null;
                     let eh = null;
-                    const f = timeout => {
-                        if (tm)
-                            clearTimeout(tm);
+                    const endOperation = timeout => {
+                        clearTimeout(tm);
                         tm = setTimeout(() => {
-                            self.addReadLaterBookmark({
-                                url: data.url,
-                                title: data.title
-                            }, folderName).then(() => {
-                                if (eh)
-                                    eh.remove();
-                                setTimeout(() => {
-                                    self.api.closeTab(tab.id);
-                                }, settings.readLaterPageTimeout);
-                            });
+                          eh?.remove();
+                          self.api.closeTab(tab.id);
                         }, timeout);
                     };
                     eh = self.api.onUpdatedTab((tabId, changeInfo, updatedTab) => {
-                        if (tab.id == tabId && changeInfo && (changeInfo.url || changeInfo.title || changeInfo.favIconUrl)) {
-                            let timeout;
-                            if (changeInfo.url)
-                                timeout = 0.6 * settings.readLaterPageTimeout;
-                            if (changeInfo.title)
-                                timeout = 0.3 * settings.readLaterPageTimeout;
-                            if (changeInfo.favIconUrl)
-                                timeout = 0.1 * settings.readLaterPageTimeout;
-                            data.title = updatedTab.title;
+                        if (tab.id != tabId || !changeInfo || (!changeInfo.url && !changeInfo.title)) return;
+                        let timeout = null;
+                        if (data.url != updatedTab.url) {
                             data.url = updatedTab.url;
-                            f(timeout);
+                            timeout = 0.6 * settings.readLaterPageTimeout;
                         }
+                        if (data.title != updatedTab.title) {
+                            data.title = updatedTab.title;
+                            timeout = 0.3 * settings.readLaterPageTimeout;
+                        }
+                        if (timeout) {
+                          clearTimeout(tm);
+                          self.api.updateBookmark(bm.id,{ title:data.title, url:data.url }).then(()=>{
+                            endOperation(timeout);
+                          });
+                        }
+                        
                     });
-                    f(0.6 * settings.readLaterPageTimeout);
+                    endOperation(settings.readLaterPageTimeout);
                 });
             });
+          });
         }
 
         execute(command, info) {
@@ -394,10 +392,13 @@
                 switch (command) {
                     case 'manage':
                         self.openManage(tab.url);
-                        return;
+                        return true;
                     case 'settings':
                         self.openSettings();
-                        return;
+                        return true;
+                    case 'deleted':
+                        self.openDeleted();
+                        return true;
                 }
                 self.getInfo(tab.url).then(data => {
                     const tabInfo = data;
@@ -483,16 +484,12 @@
                                   resolve(tabInfo);
                                   return;
                                 }
-                                self.getInfo(info.url, true).then(newData=>{
+                                self.getInfo(info.url).then(newData=>{
                                   resolve(newData);
                                 });
                                 break;
                             case 'handleDuplicates':
-                                if (!info.arr) {
-                                    self.api.notify('No arr sent to handleDuplicates');
-                                    return;
-                                }
-                                self.handleDuplicates(info.arr, info.tab, true).then(newData=>{
+                                self.handleDuplicates(info.arr, info.tab).then(newData=>{
                                   resolve(newData);
                                 });
                                 break;
@@ -647,7 +644,7 @@
             });
         }
 
-        handleDuplicates(arr, tab, fromMessage) {
+        handleDuplicates(arr, tab) {
             const self = this;
             const promise = new Promise((resolve, reject) => {
 
@@ -666,7 +663,7 @@
                     return `${str.substr(0, size)}\u2026`;
                 }
 
-                switch (arr.length) {
+                switch (arr?.length || 0) {
                     case 0:
                         resolve(null);
                         break;

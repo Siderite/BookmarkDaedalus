@@ -315,10 +315,10 @@
                     removeBookmarks();
                     break;
                 case 'restore':
-                    app.openDeleted();
+                    api.sendMessage({ action: 'deleted', sendOnce: true});
                     break;
                 case 'settings':
-                    app.openSettings();
+                    api.sendMessage({ action: 'settings', sendOnce: true});
                     break;
                 case 'moveToEnd':
                     moveToEnd();
