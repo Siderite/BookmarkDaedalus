@@ -171,7 +171,7 @@
                 $('<span></span>')
                     .addClass('subfolder')
                     .text(itm.title)
-                    .prepend($('<img/>').attr('src', 'folder.png'))
+                    .prepend($('<img/>').attr('src', 'images/folder.png'))
                     .appendTo(elem);
             }
             return elem;

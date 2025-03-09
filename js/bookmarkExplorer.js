@@ -148,7 +148,7 @@
 
         openManage(url) {
             const self = this;
-            const manageUrl = self.api.getExtensionUrl('manage.html');
+            const manageUrl = self.api.getExtensionUrl('html/manage.html');
             self.getInfo(url).then(data => {
                 self.api.getCurrentTab().then(currentTab => {
                     self.handleDuplicates(data, currentTab).then(data => {
@@ -167,7 +167,7 @@
 
         openDeleted(url) {
             const self = this;
-            const deletedUrl = self.api.getExtensionUrl('deleted.html');
+            const deletedUrl = self.api.getExtensionUrl('html/deleted.html');
             self.api.selectOrNew(deletedUrl);
         }
 
@@ -183,8 +183,8 @@
 
         refreshManage(currentTab, forced) {
             const self = this;
-            const manageUrl = self.api.getExtensionUrl('manage.html');
-            const ownUrls = [manageUrl, self.api.getExtensionUrl('deleted.html'), self.api.getExtensionUrl('settings.html'), self.api.getOptionsUrl()];
+            const manageUrl = self.api.getExtensionUrl('html/manage.html');
+            const ownUrls = [manageUrl, self.api.getExtensionUrl('html/deleted.html'), self.api.getExtensionUrl('html/settings.html'), self.api.getOptionsUrl()];
             if (ownUrls.includes(currentTab.url) || currentTab.url.startsWith('chrome:') || currentTab.url.startsWith('moz-extension:') || currentTab.url.startsWith('opera:')) {
                 if (forced || currentTab.url != manageUrl) {
                     self.api.sendMessage("current");
@@ -200,7 +200,7 @@
 
         refreshIconAndMenu(currentTab) {
             const self = this;
-            const manageUrl = self.api.getExtensionUrl('manage.html');
+            const manageUrl = self.api.getExtensionUrl('html/manage.html');
             const browser = ApiWrapper.getBrowser();
             self.api.getSettings().then(settings => {
                 self.getInfo(currentTab.url).then(data => {
@@ -210,7 +210,7 @@
                         } else {
                             self.api.removeMenuItem('manage');
                         }
-                        self.api.setIcon(currentTab.id, data ? 'icon.png' : 'icon-gray.png');
+                        self.api.setIcon(currentTab.id, data ? 'images/icon.png' : 'images/icon-gray.png');
                         self.api.toggleIcon(currentTab.id, true);
                         if (data && data.prev && settings.prevNextContext) {
                             let text = 'Navigate to previous bookmark ';
@@ -276,7 +276,7 @@
                             self.api.setTitle(currentTab.id, `${data.path} : ${data.index + 1}/${data.length}`);
                         } else {
                             self.api.setBadge(currentTab.id, '');
-                            self.api.setTitle(currentTab.id, 'Siderite\'s Bookmark Explorer');
+                            self.api.setTitle(currentTab.id, 'Bookmark Surfer Daedalus');
                         }
                         if (settings.preloadNext && data && data.next) {
                             self.preload(currentTab.id, data.next.url);
@@ -514,7 +514,7 @@
                             if (browser.isFirefox) {
                                 notification = {
                                     title: "Visit Siderite's Blog",
-                                    message: "Use this link to ask for features, report bugs or discuss the extension:\r\nhttps://siderite.blogspot.com/2016/03/my-first-chrome-extension-bookmark.html",
+                                    message: "Use this link to ask for features, report bugs or discuss the extension:\r\nhttps://siderite.dev/blog/bookmark-surfer-daedalus/",
                                 };
                                 settings.showBlogInvitation = false;
                                 if (!firstTime) {
@@ -529,7 +529,7 @@
                                     title: "Visit Siderite's Blog",
                                     message: "Click on the link below to ask for features, report bugs or discuss the extension",
                                     buttons: [{
-                                            title: 'https://siderite.blogspot.com/2016/03/my-first-chrome-extension-bookmark.html',
+                                            title: 'https://siderite.dev/blog/bookmark-surfer-daedalus/',
                                             clicked() {
                                                 self.api.selectOrNew(this.title);
                                             }

@@ -3,13 +3,14 @@
   <head>
 	<meta content="text/html;charset=utf-8" http-equiv="Content-Type">
 	<meta content="utf-8" http-equiv="encoding">
-    <title>Siderite's Bookmark Explorer - manage bookmarks</title>
-	<script src="jquery-3.2.1.min.js"></script>
-	<script src="jquery-ui.min.js"></script>
-	<script src="apiWrapper.js"></script>
-	<script src="ui.js"></script>
-	<script src="manage.js"></script>
-	<link rel="stylesheet" type="text/css" href="manage.css" media="all">
+    <title>Bookmark Surfer Daedalus - manage bookmarks</title>
+	<script src="../js/jquery-3.2.1.min.js"></script>
+	<script src="../js/jquery-ui.min.js"></script>
+	<script src="../js/apiWrapper.js"></script>
+	<script src="../js/ui.js"></script>
+	<script src="../js/manage.js"></script>
+	<link rel="stylesheet" type="text/css" href="../styles/jquery-ui.min.css" media="all">
+	<link rel="stylesheet" type="text/css" href="../styles/manage.css" media="all">
   </head>
   <body>
 	<div id="divHeader">
@@ -19,14 +20,14 @@
 			<input type="checkbox" id="chkHoldFolder"/>
 		</span>
 		<span id="spnButtons">
-			<img id="imgSelectDuplicates" title="Select duplicates in the folder (except the first)" src="selectDuplicates.png"/>
-			<img id="imgToggleBefore" title="Toggle all before current" src="toggleBefore.png"/>
-			<img id="imgToggleAll" title="Toggle all bookmarks" src="toggleAll.png"/>
-			<img id="imgMenu"  title="Menu" src="menu.png" class="visible"/>
+			<img id="imgSelectDuplicates" title="Select duplicates in the folder (except the first)" src="../images/selectDuplicates.png"/>
+			<img id="imgToggleBefore" title="Toggle all before current" src="../images/toggleBefore.png"/>
+			<img id="imgToggleAll" title="Toggle all bookmarks" src="../images/toggleAll.png"/>
+			<img id="imgMenu"  title="Menu" src="../images/menu.png" class="visible"/>
 		</span>
 	</div>
 	<div id="divSubheader"></div>
-	<div id="divFilter"><label for="txtFilter">Filter:</label><input id="txtFilter" /><img src="clearText.png" title="clear filter"/></div>
+	<div id="divFilter"><label for="txtFilter">Filter:</label><input id="txtFilter" /><img src="../images/clearText.png" title="clear filter"/></div>
 	<div id="divCounts"><span></span></div>
 	<div id="divTree"></div>
 	<ul id="ulMenu">

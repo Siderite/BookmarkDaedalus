@@ -387,9 +387,9 @@
                 };
                 const notifOpts = {
                     type: "basic",
-                    title: (options.title || "Siderite's Bookmark Explorer"),
+                    title: (options.title || "Bookmark Surfer Daedalus"),
                     message: (options.message || ''),
-                    iconUrl: "bigIcon.png"
+                    iconUrl: "images/bigIcon.png"
                 };
                 if (!browser.isFirefox) {
                     notifOpts.requireInteraction = !!options.requireInteraction;
