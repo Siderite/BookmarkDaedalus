@@ -264,29 +264,23 @@
             }
         }
 
-        getUrlComparisonSchema(text) {
+        async getUrlComparisonSchema(text) {
             const self = this;
-            const promise = new Promise((resolve, reject) => {
-                self.getSettings().then(settings => {
-                    const urlComparisonSchema = {};
-                    settings.urlComparisonSchema.split(/\s*[\r\n]+\s*/).forEach(line => {
-                        if (!line || !line.trim())
-                            return;
-                        if (/^#/.test(line))
-                            return;
-                        const m = /^([^\s]+)\s+((?:scheme|host|path|params|hash)(?:\s*,\s*(?:scheme|host|path|params|hash))*)$/i.exec(line);
-                        urlComparisonSchema[m[1].toLowerCase()] = {
-                            scheme: m[2].includes('scheme'),
-                            host: m[2].includes('host'),
-                            path: m[2].includes('path'),
-                            params: m[2].includes('params'),
-                            hash: m[2].includes('hash')
-                        };
-                    });
-                    resolve(urlComparisonSchema);
-                });
+            const settings = await self.getSettings()
+            const urlComparisonSchema = {};
+            settings.urlComparisonSchema.split(/\s*[\r\n]+\s*/).forEach(line => {
+              if (!line || !line.trim()) return;
+              if (/^#/.test(line)) return;
+              const m = /^([^\s]+)\s+((?:scheme|host|path|params|hash)(?:\s*,\s*(?:scheme|host|path|params|hash))*)$/i.exec(line);
+              urlComparisonSchema[m[1].toLowerCase()] = {
+                  scheme: m[2].includes('scheme'),
+                  host: m[2].includes('host'),
+                  path: m[2].includes('path'),
+                  params: m[2].includes('params'),
+                  hash: m[2].includes('hash')
+              };
             });
-            return promise;
+            return urlComparisonSchema;
         }
 
         getCurrentTab() {
@@ -515,29 +509,23 @@
             return data;
         }
 
-        getSettings() {
+        async getSettings() {
             const self = this;
-            return new Promise((resolve, reject) => {
-                self.getData(self.settingsKey).then(data => {
-                    data = self.expandSettings(data);
-                    if (JSON.stringify(data) != JSON.stringify(ApiWrapper._prevSettings)) {
-                        ApiWrapper.refreshCache();
-                        ApiWrapper._prevSettings = data;
-                    }
-                    resolve(data);
-                });
-            });
+            let data = await self.getData(self.settingsKey)
+            data = self.expandSettings(data);
+            if (JSON.stringify(data) != JSON.stringify(ApiWrapper._prevSettings)) {
+              ApiWrapper.refreshCache();
+              ApiWrapper._prevSettings = data;
+            }
+            return data;
         }
 
-        setSettings(settings) {
-            ApiWrapper.refreshCache();
+        async setSettings(settings) {
             const self = this;
-            return new Promise((resolve, reject) => {
-                const data = self.expandSettings(settings);
-                self.setData(self.settingsKey, data).then(() => {
-                    resolve(data);
-                });
-            });
+            ApiWrapper.refreshCache();
+            const data = self.expandSettings(settings);
+            await self.setData(self.settingsKey, data);
+            return data;
         }
 
         setIcon(tabId, icon) {
@@ -563,61 +551,56 @@
 
         toggleIcon(tabId, value) {
             const self = this;
-            const promise = new Promise((resolve, reject) => {
-                const action = self.chr.browserAction || self.chr.pageAction || self.chr.action;
-                if (action) {
-                    let f = value
-                        ? action.show||action.enable
-                        : action.hide||action.disable;
-                    f(tabId);
-                    self.log(self.getError());
-                }
-                return resolve.apply(this, arguments)
-            });
-            return promise;
+            const action = self.chr.browserAction || self.chr.pageAction || self.chr.action;
+            if (action) {
+              const f = value
+                ? action.show||action.enable
+                : action.hide||action.disable;
+              f(tabId);
+              self.log(self.getError());
+            }
         }
 
         setBadge(tabId, text, color) {
             const self = this;
             color = color || 'black';
-            const promise = new Promise(function(resolve, reject) {
-                const action = self.chr.browserAction;
-                if (action) {
-                    const id = +(tabId);
-                    if (id) {
-                        action.setBadgeText({
-                            text: `${text || ''}`,
-                            tabId: id
-                        });
-                        action.setBadgeBackgroundColor({
-                            color,
-                            tabId: id
-                        });
-                    }
+            const action = self.chr.browserAction;
+            if (action) {
+                const id = +(tabId);
+                if (id) {
+                    if (!action.setBadgeText) {
+                       throw new Error("This platform doesn't support the set badge text API!");
+                    };
+                    action.setBadgeText({
+                        text: `${text || ''}`,
+                        tabId: id
+                    });
+                    if (!action.setBadgeBackgroundColor) {
+                       throw new Error("This platform doesn't support the set badge background color API!");
+                    };
+                    action.setBadgeBackgroundColor({
+                        color,
+                        tabId: id
+                    });
                 }
-                return resolve.apply(this);
-            });
-            return promise;
+            } else {
+                console.warn("This platform doesn't support browserAction");
+            }
         }
 
         setTitle(tabId, text) {
             const self = this;
-            const promise = new Promise(function(resolve, reject) {
-                const action = self.chr.browserAction || self.chr.pageAction || self.chr.action;
-                if (!action || !action.setTitle) {
-                    reject("This platform doesn't support the set title API!");
-                    return;
-                };
-                const id = +(tabId);
-                if (id) {
-                    action.setTitle({
-                        title: `${text || ''}`,
-                        tabId: id
-                    });
-                }
-                return resolve.apply(this);
-            });
-            return promise;
+            const action = self.chr.browserAction || self.chr.pageAction || self.chr.action;
+            if (!action || !action.setTitle) {
+                throw new Error("This platform doesn't support the set title API!");
+            };
+            const id = +(tabId);
+            if (id) {
+                action.setTitle({
+                    title: `${text || ''}`,
+                    tabId: id
+                });
+            }
         }
 
         getExtensionUrl(file) {
@@ -716,18 +699,14 @@
             return promise;
         }
 
-        selectOrNew(url) {
+        async selectOrNew(url) {
             const self = this;
-            const promise = new Promise((resolve, reject) => {
-                self.getTabsByUrl(url).then(tabs => {
-                    if (!tabs || !tabs[0]) {
-                        self.newTab(url).then(resolve);
-                    } else {
-                        self.setSelected(tabs[0].id).then(resolve);
-                    }
-                });
-            });
-            return promise;
+            const tabs = await self.getTabsByUrl(url);
+            if (!tabs || !tabs[0]) {
+                return await self.newTab(url);
+            } else {
+                return await self.setSelected(tabs[0].id);
+            }
         }
 
         getTree() {
@@ -742,35 +721,25 @@
             return promise;
         }
 
-        getBookmarksBar() {
+        async getBookmarksBar() {
             const self = this;
-            const promise = new Promise((resolve, reject) => {
-                self.getTree().then(tree => {
-                    if (!tree || !tree.length || !tree[0].children || !tree[0].children.length) {
-                        self.log('Error reading bookmarks!');
-                        return;
-                    }
-                    const bar = tree[0].children.filter(itm => itm.id == 'toolbar_____' || itm.id == '1')[0];
-                    if (!bar) {
-                        self.log('Couldn not find bookmars toolbar!');
-                        return;
-                    }
-                    resolve(bar);
-                });
-            });
-            return promise;
+            const tree = await self.getTree();
+            if (!tree || !tree.length || !tree[0].children || !tree[0].children.length) {
+                self.log('Error reading bookmarks!');
+                return;
+            }
+            const bar = tree[0].children.filter(itm => itm.id == 'toolbar_____' || itm.id == '1')[0];
+            if (!bar) {
+                self.log('Couldn not find bookmars toolbar!');
+                return;
+            }
+            return bar;
         }
 
-        getBookmarksByIds(ids, tree) {
+        async getBookmarksByIds(ids, tree) {
             const self = this;
-            let promise;
             if (!tree) {
-                promise = new Promise((resolve, reject) => {
-                    self.getTree().then(tree => {
-                        self.getBookmarksByIds(ids, tree).then(resolve);
-                    });
-                });
-                return promise;
+               tree = await self.getTree()
             }
 
             function walk(tree, result) {
@@ -785,55 +754,39 @@
                     }
                 });
             };
-            promise = new Promise((resolve, reject) => {
-                const result = [];
-                walk(tree, result);
-                resolve(result);
-            });
-            return promise;
+            const result = [];
+            walk(tree, result);
+            return result;
         }
 
-        getBookmarksByUrl(url, extraOptions, tree) {
+        async getBookmarksByUrl(url, extraOptions, tree) {
             const self = this;
-            const promise = new Promise((resolve, reject) => {
-                if (!tree) {
-                    self.getTree().then(tree => {
-                        self.getBookmarksByUrl(url, extraOptions, tree).then(resolve);
-                    });
-                    return;
-                }
-                self.getUrlComparisonSchema().then(schema => {
-                    const result = [];
-
-                    function walk(tree) {
-                        const arr = tree.children || tree;
-                        if (!Array.isArray(arr)) return;
-                        arr.forEach(itm => {
-                            if (itm.children) {
-                                walk(itm);
-                            }
-                            if (!ApiWrapper.compareUrls(url, itm.url, schema, extraOptions).different) {
-                                result.push(itm);
-                            }
-                        });
-                    }
-                    walk(tree);
-                    resolve(result);
-                });
-            });
-            return promise;
-        }
-
-        getBookmarksByTitle(title, tree) {
-            const self = this;
-            let promise;
             if (!tree) {
-                promise = new Promise((resolve, reject) => {
-                    self.getTree().then(tree => {
-                        self.getBookmarksByTitle(title, tree).then(resolve);
-                    });
+                tree = await self.getTree();
+            }
+            const schema = await self.getUrlComparisonSchema();
+            const result = [];
+
+            function walk(tree) {
+                const arr = tree.children || tree;
+                if (!Array.isArray(arr)) return;
+                arr.forEach(itm => {
+                    if (itm.children) {
+                        walk(itm);
+                    }
+                    if (!ApiWrapper.compareUrls(url, itm.url, schema, extraOptions).different) {
+                        result.push(itm);
+                    }
                 });
-                return promise;
+            }
+            walk(tree);
+            return result;
+        }
+
+        async getBookmarksByTitle(title, tree) {
+            const self = this;
+            if (!tree) {
+                tree = await self.getTree();
             }
 
             function walk(tree, result) {
@@ -848,28 +801,29 @@
                     }
                 });
             };
-            promise = new Promise((resolve, reject) => {
-                const result = [];
-                walk(tree, result);
-                resolve(result);
-            });
-            return promise;
+            const result = [];
+            walk(tree, result);
+            return result;
         }
 
         removeBookmarksById(ids) {
             const self = this;
+            if (!self.chr.bookmarks || !self.chr.bookmarks.remove) {
+                reject("This platform doesn't support the remove bookmarks API!");
+                return;
+            };
             const promise = new Promise((resolve, reject) => {
-                if (!self.chr.bookmarks || !self.chr.bookmarks.remove) {
-                    reject("This platform doesn't support the remove bookmarks API!");
-                    return;
-                };
-                self.getBookmarksByIds(ids).then(bms => {
-                    bms.forEach(bm => {
-                        self.chr.bookmarks.remove(bm.id, () => {});
-                    });
-                    resolve(bms);
-                });
+              self.getBookmarksByIds(ids).then(bms => {
+                  let k = bms.length;
+                  bms.forEach(bm => {
+                      self.chr.bookmarks.remove(bm.id, () => {
+                          k--;
+                          if (k==0) resolve(bms);
+                      });
+                  });
+              });
             });
+
             return promise;
         }
 
@@ -914,104 +868,83 @@
             return promise;
         }
 
-        ensureCleanDeletedBookmarks(arr) {
+        async ensureCleanDeletedBookmarks(arr) {
             const self = this;
-            return new Promise((resolve, reject) => {
-                if (!arr || !arr.bookmarks) {
-                    resolve();
-                    return;
-                }
-                self.getSettings().then(settings => {
-                    if (!settings.daysAutoClearDeleted) {
-                        resolve();
-                        return;
-                    }
-                    const now = new Date();
-                    const newbms = arr.bookmarks.filter(obj => {
-                        const time = obj.time || new Date('2016-06-26').getTime();
-                        return (now - time) <= 86400000 * settings.daysAutoClearDeleted;
-                    });
-                    if (newbms.length == arr.bookmarks.length) {
-                        resolve();
-                        return;
-                    }
-                    arr.bookmarks = newbms;
-                    self.setData(self.deletedBookmarksKey, arr).then(resolve);
-                });
+            if (!arr || !arr.bookmarks) {
+                return;
+            }
+            const settings = await self.getSettings();
+            if (!settings.daysAutoClearDeleted) {
+                return;
+            }
+            const now = new Date();
+            const newbms = arr.bookmarks.filter(obj => {
+                const time = obj.time || new Date('2016-06-26').getTime();
+                return (now - time) <= 86400000 * settings.daysAutoClearDeleted;
             });
+            if (newbms.length == arr.bookmarks.length) {
+                return;
+            }
+            arr.bookmarks = newbms;
+            return await self.setData(self.deletedBookmarksKey, arr);
         }
 
-        getDeletedBookmarksSize() {
+        async getDeletedBookmarksSize() {
             const self = this;
-            return new Promise((resolve, reject) => {
-                self.getDataSize(self.deletedBookmarksKey).then(resolve);
-            });
+            return await self.getDataSize(self.deletedBookmarksKey);
         }
 
-        getDeletedBookmarks() {
+        async getDeletedBookmarks() {
             const self = this;
-            return new Promise((resolve, reject) => {
-                self.getData(self.deletedBookmarksKey).then(arr => {
-                    if (!arr || !arr.bookmarks || !arr.bookmarks.length) {
-                        resolve(null);
-                    } else {
-                        self.ensureCleanDeletedBookmarks(arr).then(() => {
-                            resolve(arr.bookmarks);
-                        });
-                    }
-                });
-            });
+            const arr = await self.getData(self.deletedBookmarksKey);
+            if (!arr || !arr.bookmarks || !arr.bookmarks.length) {
+                return null;
+            } else {
+                await self.ensureCleanDeletedBookmarks(arr);
+                return arr.bookmarks;
+            }
         }
 
-        addDeletedBookmarks(bookmarks) {
+        async addDeletedBookmarks(bookmarks) {
             const self = this;
-            return new Promise((resolve, reject) => {
-                self.getData(self.deletedBookmarksKey).then(arr => {
-                    if (!arr || !arr.bookmarks || !arr.bookmarks.length)
-                        arr = {
-                            bookmarks: []
-                        };
-                    arr.bookmarks.push({
-                        time: new Date().getTime(),
-                        items: bookmarks
-                    });
-                    self.setData(self.deletedBookmarksKey, arr).then(resolve);
-                });
-            });
-        }
-
-        removeDeletedBookmarksByIds(ids) {
-            const self = this;
-            return new Promise((resolve, reject) => {
-                self.getData(self.deletedBookmarksKey).then(arr => {
-                    if (!arr || !arr.bookmarks || !arr.bookmarks.length) {
-                        resolve(null);
-                        return;
-                    }
-                    arr.bookmarks.forEach(obj => {
-                        let i = 0;
-                        while (i < obj.bookmarks?.length || 0) {
-                            if (ids.includes(obj.bookmarks[i].id)) {
-                                obj.bookmarks.splice(i, 1);
-                            } else {
-                                i++;
-                            }
-                        }
-                    });
-                    arr.bookmarks = arr.bookmarks.filter(obj => !!obj.bookmarks?.length);
-                    self.setData(self.deletedBookmarksKey, arr).then(resolve);
-                });
-            });
-        }
-
-        removeAllDeletedBookmarks() {
-            const self = this;
-            return new Promise((resolve, reject) => {
-                const arr = {
+            let arr = await self.getData(self.deletedBookmarksKey);
+            if (!arr || !arr.bookmarks || !arr.bookmarks.length)
+                arr = {
                     bookmarks: []
                 };
-                self.setData(self.deletedBookmarksKey, arr).then(resolve);
+            arr.bookmarks.push({
+                time: new Date().getTime(),
+                items: bookmarks
             });
+            return await self.setData(self.deletedBookmarksKey, arr);
+        }
+
+        async removeDeletedBookmarksByIds(ids) {
+            const self = this;
+            const arr = await self.getData(self.deletedBookmarksKey);
+            if (!arr || !arr.bookmarks || !arr.bookmarks.length) {
+                return null;
+            }
+            arr.bookmarks.forEach(obj => {
+                let i = 0;
+                while (i < obj.bookmarks?.length || 0) {
+                    if (ids.includes(obj.bookmarks[i].id)) {
+                        obj.bookmarks.splice(i, 1);
+                    } else {
+                        i++;
+                    }
+                }
+            });
+            arr.bookmarks = arr.bookmarks.filter(obj => !!obj.bookmarks?.length);
+            return await self.setData(self.deletedBookmarksKey, arr);
+        }
+
+        async removeAllDeletedBookmarks() {
+            const self = this;
+            const arr = {
+                bookmarks: []
+            };
+            return await self.setData(self.deletedBookmarksKey, arr);
         }
 
         createMenuItem(id, title, parentId) {
@@ -1136,91 +1069,70 @@
             return promise;
         }
 
-        pushUrlForTab(tabId, url) {
+        async pushUrlForTab(tabId, url) {
             const self = this;
-            const promise = new Promise((resolve, reject) => {
-                self.getData(self.urlHistoryKey).then(history => {
-                    history = history || {};
-                    let list = history[tabId];
-                    if (!list) {
-                        list = [];
-                        history[tabId] = list;
-                    }
-                    list.push(url);
-                    self.setData(self.urlHistoryKey, history).then(() => {
-                        resolve(url);
-                    });
-                });
-            });
-            return promise;
+            let history = await self.getData(self.urlHistoryKey);
+            history = history || {};
+            let list = history[tabId];
+            if (!list) {
+                list = [];
+                history[tabId] = list;
+            }
+            list.push(url);
+            await self.setData(self.urlHistoryKey, history);
+            return url;
         }
 
-        getListOfUrls(tabId) {
+        async getListOfUrls(tabId) {
             const self = this;
-            const promise = new Promise((resolve, reject) => {
-                self.getData(self.urlHistoryKey).then(history => {
-                    history = history || {};
-                    const list = history[tabId];
-                    list ? resolve(list) : self.log(`No history for tab ${tabId}`);
-                });
-            });
-            return promise;
+            let history = await self.getData(self.urlHistoryKey);
+            history = history || {};
+            const list = history[tabId];
+            if (!list) self.log(`No history for tab ${tabId}`);
+            return list;
         }
 
-        clearUrlHistory(tabId) {
+        async clearUrlHistory(tabId) {
             const self = this;
-            const promise = new Promise((resolve, reject) => {
-                self.getData(self.urlHistoryKey).then(history => {
-                    history = history || {};
-                    if (tabId) {
-                        const exists = !!history[tabId];
-                        delete history[tabId];
-                        self.setData(self.urlHistoryKey, history).then(() => {
-                            resolve(exists);
-                        });
-                    } else {
-                        self.getAllTabs().then(tabs => {
-                            const hids = Object.keys(history);
-                            const tids = tabs.map(tab => `${tab.id}`);
-                            hids.forEach(id => {
-                                if (!tids.includes(id)) {
-                                    delete history[id];
-                                }
-                            });
-                            self.setData(self.urlHistoryKey, history).then(() => {
-                                resolve(true);
-                            });
-                        });
+            let history = await self.getData(self.urlHistoryKey);
+            history = history || {};
+            if (tabId) {
+                const exists = !!history[tabId];
+                delete history[tabId];
+                await self.setData(self.urlHistoryKey, history);
+                return exists;
+            } else {
+                const tabs = await self.getAllTabs();
+                const hids = Object.keys(history);
+                const tids = tabs.map(tab => `${tab.id}`);
+                hids.forEach(id => {
+                    if (!tids.includes(id)) {
+                        delete history[id];
                     }
                 });
-            });
-            return promise;
+                await self.setData(self.urlHistoryKey, history);
+                return true;
+            }
         }
 
-        getLastTabBookmarkedUrl(tabId) {
+        async getLastTabBookmarkedUrl(tabId) {
             const self = this;
-            const promise = new Promise((resolve, reject) => {
-                self.getListOfUrls(tabId).then(list => {
-                    let i = list.length;
-                    const f = () => {
-                        i--;
-                        if (i < 0) {
-                            self.log(`No bookmarked tab in the history of tab ${tabId}`);
-                            return;
-                        }
-                        const url = list[i];
-                        self.getBookmarksByUrl(url).then(bms => {
-                            if (!bms || !bms.length) {
-                                f();
-                                return;
-                            }
-                            resolve(url);
-                        })
-                    };
-                    f();
-                });
-            });
-            return promise;
+            const list = await self.getListOfUrls(tabId);
+            let i = list.length;
+            const f = async () => {
+                i--;
+                if (i < 0) {
+                    self.log(`No bookmarked tab in the history of tab ${tabId}`);
+                    return;
+                }
+                const url = list[i];
+                const bms = await self.getBookmarksByUrl(url);
+                if (!bms || !bms.length) {
+                    return f();
+                }
+                return url;
+            };
+            return f();
         }
 
         onUpdatedTab(listener) {

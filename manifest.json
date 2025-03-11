@@ -3,7 +3,7 @@
 
 	"name": "Bookmark Surfer Daedalus",
 	"description": "Easily manage browser bookmarks and navigate through them with keyboard or mouse",
-	"version": "0.1.0",
+	"version": "0.1.1",
 
 	"permissions": [
 		"tabs",
