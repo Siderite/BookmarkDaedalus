@@ -1,9 +1,9 @@
-(function($) {
+(function ($) {
 
     const global = this;
     const context = global.testContext?.document || global.document;
 
-    $.fn.contextMenu = function(options) {
+    $.fn.contextMenu = function (options) {
         const target = $(this);
         const anchor = $(options.anchor);
 
@@ -12,7 +12,7 @@
                 return;
             options.select = (ev, ui) => {
                 const command = $(ui.item).data('command');
-                if (command && typeof(options.executeCommand) == 'function') {
+                if (command && typeof (options.executeCommand) == 'function') {
                     options.executeCommand(command);
                 }
                 target.hide();
@@ -35,7 +35,7 @@
         function refreshMenuHeaders() {
             $('li.ui-widget-header', target)
                 .show()
-                .each(function() {
+                .each(function () {
                     const itm = $(this);
                     let next = itm.next('li');
                     while (next.length) {
@@ -61,14 +61,14 @@
                 });
         }
 
-        anchor.click(function(ev) {
+        anchor.click(function (ev) {
             ev.preventDefault();
             ev.stopPropagation();
             if (target.is(':visible')) {
                 target.hide();
             } else {
                 menuInit();
-                if (typeof(options.onOpen) == 'function') {
+                if (typeof (options.onOpen) == 'function') {
                     options.onOpen(this);
                 }
                 refreshMenuHeaders();
@@ -85,7 +85,7 @@
         return this;
     };
 
-    $.fn.bringIntoView = function(options) {
+    $.fn.bringIntoView = function (options) {
         const target = $(this);
         options = options || {};
         const parent = $(options.parent || target.parent());
@@ -94,7 +94,7 @@
         let minTop = 100000000;
         let maxTop = -100000000;
         let maxHeight = 0;
-        target.each(function() {
+        target.each(function () {
             const ofs = $(this).offset();
             if (minTop > ofs.top)
                 minTop = ofs.top;
@@ -120,7 +120,7 @@
         return this;
     }
 
-    $.fn.listable = function(options) {
+    $.fn.listable = function (options) {
         const target = $(this);
         options = options || {};
         let flt = null;
@@ -134,10 +134,10 @@
                     const val = flt.val();
                     if (val) {
                         const splits = val.split(/\s+/).filter(s => s).map(s => s.toLowerCase());
-                        items.each(function() {
+                        items.each(function () {
                             const itm = $(this);
                             let content = itm.text().toLowerCase();
-                            itm.find('[href]').each(function() {
+                            itm.find('[href]').each(function () {
                                 content += ` ${$(this).attr('href')}`;
                             });
                             let visible = true;
@@ -158,21 +158,21 @@
             }
         }
         $(context).on('keydown', e => {
-            if (typeof(options.isEnabled) == 'function' && !options.isEnabled()) {
+            if (typeof (options.isEnabled) == 'function' && !options.isEnabled()) {
                 return;
             }
-            const items = target.find(options.items).filter(function() {
+            const items = target.find(options.items).filter(function () {
                 return $(this).is(':visible');
             });
             let index = -1;
-            items.each(function(idx) {
+            items.each(function (idx) {
                 if ($(this).is('.current')) {
                     index = idx;
                     return false;
                 }
             });
             if (index < 0) {
-                if (typeof(options.findCurrent) == 'function') {
+                if (typeof (options.findCurrent) == 'function') {
                     index = options.findCurrent(items) || 0;
                 } else {
                     index = 0;
@@ -278,12 +278,12 @@
         }
     });
 
-    $.fn.hideOnError = function(options) {
+    $.fn.hideOnError = function (options) {
         const target = $(this);
         if (!target.is('img')) return this;
         options = options || {};
 
-        target.on('error', function() {
+        target.on('error', function () {
             $(this).hide();
         });
 

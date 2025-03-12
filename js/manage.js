@@ -1,4 +1,4 @@
-(function($) {
+(function ($) {
 
     const global = this;
     const context = global.testContext && global.testContext.document || global.document;
@@ -41,7 +41,7 @@
             },
             findCurrent(items) {
                 let index = 0;
-                items.each(function(idx) {
+                items.each(function (idx) {
                     if ($(this).is('.selected')) {
                         index = idx;
                         return false;
@@ -59,16 +59,16 @@
                 return;
             }
             if (data.action == 'refresh') {
-              data = data.data;
-              if (!chkHoldFolder.is(':checked')) {
-                  refresh(data);
-                  return;
-              }
-              if (currentData?.folder && data?.folder && currentData.folder.id == data.folder.id) {
-                  refresh(data);
-              } else {
-                  refreshFromCurrent();
-              }
+                data = data.data;
+                if (!chkHoldFolder.is(':checked')) {
+                    refresh(data);
+                    return;
+                }
+                if (currentData?.folder && data?.folder && currentData.folder.id == data.folder.id) {
+                    refresh(data);
+                } else {
+                    refreshFromCurrent();
+                }
             }
         });
 
@@ -76,8 +76,8 @@
             if (!currentData?.current) {
                 refresh();
             } else {
-                const tabInfo = await api.sendMessage({action:'getInfo', url: currentData.current.url});
-                const data = await api.sendMessage({ action: 'handleDuplicates', arr:tabInfo?.result });
+                const tabInfo = await api.sendMessage({ action: 'getInfo', url: currentData.current.url });
+                const data = await api.sendMessage({ action: 'handleDuplicates', arr: tabInfo?.result });
                 refresh(data);
             }
         }
@@ -92,7 +92,7 @@
             currentData = data;
             $(context).trigger('refresh');
             const checkData = {};
-            tree.find('input[type=checkbox]').each(function() {
+            tree.find('input[type=checkbox]').each(function () {
                 const id = $(this).data('id');
                 if (id) {
                     const checked = $(this).prop('checked');
@@ -116,7 +116,7 @@
             });
             const schema = await api.getUrlComparisonSchema();
             const urlOptions = ApiWrapper.getUrlOptions(data.current.url, schema);
-            tree.find('a').each(function() {
+            tree.find('a').each(function () {
                 const anchorUrlOptions = ApiWrapper.getUrlOptions($(this).attr('href'), schema);
                 if (ApiWrapper.compareUrlOptions(anchorUrlOptions, urlOptions).different)
                     return;
@@ -152,7 +152,7 @@
                     .attr('type', 'checkbox')
                     .val(itm.id)
                     .attr('title', 'Mark for delete/move etc.')
-                    .click(function() {
+                    .click(function () {
                         $('div.current', tree).removeClass('current');
                         $(this).parents('div:first').addClass('current');
                     })
@@ -223,7 +223,7 @@
         function copyURLsToClipboard() {
             const list = [];
             tree.find('>ul input:nothidden:checked').closest('li').find('a[href]:nothidden')
-                .each(function() {
+                .each(function () {
                     const href = $(this).attr('href');
                     list.push(href);
                 });
@@ -310,10 +310,10 @@
                     removeBookmarks();
                     break;
                 case 'restore':
-                    api.sendMessage({ action: 'deleted', sendOnce: true});
+                    api.sendMessage({ action: 'deleted', sendOnce: true });
                     break;
                 case 'settings':
-                    api.sendMessage({ action: 'settings', sendOnce: true});
+                    api.sendMessage({ action: 'settings', sendOnce: true });
                     break;
                 case 'moveToEnd':
                     moveToEnd();
@@ -330,9 +330,9 @@
 
         function toggleAll(val) {
             const ul = tree.find('>ul');
-            if (typeof(value) == 'undefined') {
+            if (typeof (value) == 'undefined') {
                 val = 0;
-                ul.find('>li>div:nothidden>input').each(function() {
+                ul.find('>li>div:nothidden>input').each(function () {
                     val += ($(this).is(':checked') ? 1 : -1);
                 });
                 val = val < 0;
@@ -345,7 +345,7 @@
             const ul = tree.find('>ul');
             let val = 0;
             let chks = $();
-            ul.find('>li>div:nothidden').each(function(idx) {
+            ul.find('>li>div:nothidden').each(function (idx) {
                 const chk = $('>input', this);
                 if ($(this).is('.selected')) {
                     return false;
@@ -362,7 +362,7 @@
             const schema = await api.getUrlComparisonSchema();
             const ul = tree.find('>ul');
             const options = [];
-            ul.find('>li>div:nothidden').each(function() {
+            ul.find('>li>div:nothidden').each(function () {
                 const a = $('a', this);
                 const chk = $('input', this);
                 const url = a.attr('href');
@@ -378,7 +378,7 @@
                 options.push(urlOptions);
             });
             refreshMenuOptions(true);
-            
+
         }
 
         async function removeBookmarks() {
@@ -389,7 +389,7 @@
             if (!confirm(`Are you sure you want to delete ${inputs.length} bookmarks?`))
                 return;
             const ids = [];
-            inputs.each(function() {
+            inputs.each(function () {
                 const id = $(this).val();
                 if (id) {
                     ids.push({
@@ -425,7 +425,7 @@
             if (!confirm(`Are you sure you want to move to end ${inputs.length} bookmarks?`))
                 return;
             const ids = [];
-            inputs.each(function() {
+            inputs.each(function () {
                 const id = $(this).val();
                 if (id) {
                     ids.push({
@@ -452,7 +452,7 @@
             if (!confirm(`Are you sure you want to move to start ${inputs.length} bookmarks?`))
                 return;
             const ids = [];
-            inputs.each(function() {
+            inputs.each(function () {
                 const id = $(this).val();
                 if (id) {
                     ids.push({
@@ -474,7 +474,7 @@
 
         refresh();
 
-        
+
     });
 
 })(jQuery);

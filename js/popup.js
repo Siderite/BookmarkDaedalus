@@ -1,4 +1,4 @@
-(function($) {
+(function ($) {
 
     const global = this;
     const context = global.testContext && global.testContext.document || global.document;
@@ -25,11 +25,11 @@
         });
         btnManage.click(() => {
             api.sendMessage('manage');
-            setTimeout(window.close,1000);
+            setTimeout(window.close, 1000);
         });
         btnSettings.click(() => {
             api.sendMessage('settings');
-            setTimeout(window.close,1000);
+            setTimeout(window.close, 1000);
         });
 
         async function refresh() {
@@ -38,7 +38,7 @@
             btnSkip.toggle(!settings.hideSkipButton);
             const tab = await api.getCurrentTab();
             const tabInfo = await api.sendMessage({ action: 'getInfo', url: tab.url });
-            let data = await api.sendMessage({ action: 'handleDuplicates', arr: tabInfo?.result, tab: tab});
+            let data = await api.sendMessage({ action: 'handleDuplicates', arr: tabInfo?.result, tab: tab });
             data = data.result;
             if (data?.folder) {
                 divFolder.text(data.folder.title);
@@ -79,7 +79,7 @@
 
         refresh();
         api.onUpdatedTab(refresh);
-        
+
     });
 
 })(jQuery);

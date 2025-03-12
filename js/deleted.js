@@ -1,4 +1,4 @@
-(function($) {
+(function ($) {
 
     const global = this;
     const context = global.testContext && global.testContext.document || global.document;
@@ -41,7 +41,7 @@
 
         function toggleAll(elem) {
             const inputs = elem.find('input[type=checkbox]:nothidden');
-            const checked = inputs.filter(function() {
+            const checked = inputs.filter(function () {
                 return $(this).is(':checked');
             }).length / inputs.length >= 0.5;
             inputs.prop('checked', !checked);
@@ -83,7 +83,7 @@
                     .attr('type', 'checkbox')
                     .val(itm.id)
                     .attr('title', 'Mark for delete')
-                    .click(function() {
+                    .click(function () {
                         $('div.current', list).removeClass('current');
                         $(this).parents('div:first').addClass('current');
                         refreshRestore();
@@ -129,7 +129,7 @@
                 return;
 
             let bookmarks = [];
-            list.find('ul').each(function() {
+            list.find('ul').each(function () {
                 const ul = $(this);
                 items = ul.find('input[type=checkbox]:nothidden:checked');
                 bookmarks = bookmarks.concat(items.get().map(itm => $(itm).data('bookmark')));
@@ -144,7 +144,7 @@
                 return;
 
             let bookmarks = [];
-            list.find('ul').each(function() {
+            list.find('ul').each(function () {
                 const ul = $(this);
                 items = ul.find('input[type=checkbox]:nothidden:checked');
                 bookmarks = bookmarks.concat(items.get().map(itm => $(itm).data('bookmark')));
@@ -184,7 +184,7 @@
         });
 
         function refreshStats(stats) {
-            divStats.text(`(${stats.count} items in ${Math.round(stats.size/102.4)/10} KB)`);
+            divStats.text(`(${stats.count} items in ${Math.round(stats.size / 102.4) / 10} KB)`);
         }
 
         async function refresh() {
@@ -232,7 +232,7 @@
         }
         refresh();
 
-        
+
     });
 
 })(jQuery);

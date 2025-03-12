@@ -1,10 +1,10 @@
-(function() {
+(function () {
 
     const global = this;
 
     class BookmarkExplorer {
         constructor(api, noInitialRefresh) {
-            if (!api || typeof(api) != "object")
+            if (!api || typeof (api) != "object")
                 throw ('BookmarkExplorer needs an ApiWrapper instance as the first constructor parameter');
             this.api = api;
             this.inviteToBlogIntervalInDays = 100;
@@ -88,7 +88,7 @@
                     } else {
                         refresh(true);
                     }
-                    
+
                 });
             }
             if (self.api.onChangedBookmark) {
@@ -113,17 +113,17 @@
             }
 
             if (self.api.onCommand) {
-                self.api.onCommand(function() {
+                self.api.onCommand(function () {
                     self.execute(...arguments);
                 });
             }
 
             if (self.api.onMessage) {
-                self.api.onMessage(data=>{
-                    if (typeof(data)=='string') {
-                      return self.execute(data);
+                self.api.onMessage(data => {
+                    if (typeof (data) == 'string') {
+                        return self.execute(data);
                     } else {
-                      return self.execute(data.action,data);
+                        return self.execute(data.action, data);
                     }
                 });
             }
@@ -147,7 +147,7 @@
             const currentTab = await self.api.getCurrentTab();
             const data = await self.handleDuplicates(tabInfo, currentTab);
             await self.api.selectOrNew(manageUrl);
-            self.api.sendMessage({ action: 'refresh', data:data});
+            self.api.sendMessage({ action: 'refresh', data: data });
         }
 
         openSettings(url) {
@@ -182,7 +182,7 @@
             }
             const tabInfo = await self.getInfo(currentTab.url);
             const data = await self.handleDuplicates(tabInfo, currentTab);
-            self.api.sendMessage({ action: 'refresh', data:data});
+            self.api.sendMessage({ action: 'refresh', data: data });
         }
 
         async refreshIconAndMenu(currentTab) {
@@ -292,7 +292,7 @@
                 bm.parentId = rl.id;
                 return await self.api.createBookmarks(bm);
             }
-            
+
         }
 
         async readLater(url, folderName) {
@@ -309,8 +309,8 @@
             const endOperation = timeout => {
                 clearTimeout(tm);
                 tm = setTimeout(() => {
-                  eh?.remove();
-                  self.api.closeTab(tab.id);
+                    eh?.remove();
+                    self.api.closeTab(tab.id);
                 }, timeout);
             };
             eh = self.api.onUpdatedTab(async (tabId, changeInfo, updatedTab) => {
@@ -325,9 +325,9 @@
                     timeout = 0.3 * settings.readLaterPageTimeout;
                 }
                 if (timeout) {
-                  clearTimeout(tm);
-                  await self.api.updateBookmark(bm.id,{ title:data.title, url:data.url });
-                  endOperation(timeout);
+                    clearTimeout(tm);
+                    await self.api.updateBookmark(bm.id, { title: data.title, url: data.url });
+                    endOperation(timeout);
                 }
             });
             endOperation(settings.readLaterPageTimeout);
@@ -348,10 +348,10 @@
                 if (!info.pageUrl) return;
                 const confirmed = !settings.confirmBookmarkPage || await self.confirm(tab.id, 'No link selected. Do you want me to bookmark the current page?');
                 if (confirmed) {
-                  self.addReadLaterBookmark({
-                    url: tab.url,
-                    title: tab.title
-                  }, folderName);
+                    self.addReadLaterBookmark({
+                        url: tab.url,
+                        title: tab.title
+                    }, folderName);
                 }
                 return;
             }
@@ -434,7 +434,7 @@
                         return;
                     }
                     if (info.url == tab.url) {
-                      return tabInfo;
+                        return tabInfo;
                     }
                     return await self.getInfo(info.url);
                 case 'handleDuplicates':
@@ -470,20 +470,20 @@
                     title: "Visit Siderite's Blog",
                     message: "Click on the link below to ask for features, report bugs or discuss the extension",
                     buttons: [{
-                            title: 'https://siderite.dev/blog/bookmark-surfer-daedalus/',
-                            async clicked() {
-                                await self.api.selectOrNew(this.title);
-                            }
-                        },
-                        {
-                            title: 'Never show this again',
-                            async clicked() {
-                                self.api.closeNotification(notification.notificationId);
-                                settings.showBlogInvitation = false;
-                                await self.api.setSettings(settings);
-                                self.api.notify('Find the blog entry link in the extension Options');
-                            }
+                        title: 'https://siderite.dev/blog/bookmark-surfer-daedalus/',
+                        async clicked() {
+                            await self.api.selectOrNew(this.title);
                         }
+                    },
+                    {
+                        title: 'Never show this again',
+                        async clicked() {
+                            self.api.closeNotification(notification.notificationId);
+                            settings.showBlogInvitation = false;
+                            await self.api.setSettings(settings);
+                            self.api.notify('Find the blog entry link in the extension Options');
+                        }
+                    }
                     ],
                     requireInteraction: true
                 };
@@ -564,7 +564,7 @@
             BookmarkExplorer.preloadedUrls[url] = now;
             if (time && now - time < 86400000)
                 return;
-            self.api.sendTabMessage(tabId, { action: 'preload', url: url});
+            self.api.sendTabMessage(tabId, { action: 'preload', url: url });
         }
 
         async confirm(tabId, message) {

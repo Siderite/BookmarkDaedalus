@@ -37,7 +37,7 @@
     }
 
     static throttle(fn, time) {
-      time =  + (time) || 500;
+      time = + (time) || 500;
       let timeout = null;
       const c = () => {
         clearTimeout(timeout);
@@ -223,7 +223,7 @@
     log() {
       if (this.debug && arguments.length) {
         for (let i = 0; i < arguments.length; i++) {
-          if (typeof(arguments[i]) != 'undefined') {
+          if (typeof (arguments[i]) != 'undefined') {
             console.log(arguments.length == 1 ? arguments[0] : arguments);
           }
         }
@@ -271,7 +271,7 @@
     async getUrlComparisonSchema(text) {
       const self = this;
       const settings = await self.getSettings()
-        const urlComparisonSchema = {};
+      const urlComparisonSchema = {};
       settings.urlComparisonSchema.split(/\s*[\r\n]+\s*/).forEach(line => {
         if (!line?.trim())
           return;
@@ -292,83 +292,83 @@
     getCurrentTab() {
       const self = this;
       const promise = new Promise((resolve, reject) => {
-          if (!self.chr.tabs?.query) {
-            reject("This platform doesn't support the querying tabs API!");
-            return;
-          };
-          self.chr.tabs.query({
-            'active': true,
-            'lastFocusedWindow': true
-          }, tabs => {
-            let tab = tabs[0];
-            if (tab) {
-              resolve(tab);
+        if (!self.chr.tabs?.query) {
+          reject("This platform doesn't support the querying tabs API!");
+          return;
+        };
+        self.chr.tabs.query({
+          'active': true,
+          'lastFocusedWindow': true
+        }, tabs => {
+          let tab = tabs[0];
+          if (tab) {
+            resolve(tab);
+          } else {
+            if (self.lastActivatedTabId) {
+              self.log('No active tab in lastActivatedWindow found, trying last activated tab id');
+              self.chr.tabs.query({
+                'active': true
+              }, tabs => {
+                tab = tabs.filter(t => t.id == self.lastActivatedTabId)[0];
+                if (tab) {
+                  resolve(tab);
+                } else {
+                  self.log('No active tab found with the lastActivatedTabId found');
+                }
+              });
             } else {
-              if (self.lastActivatedTabId) {
-                self.log('No active tab in lastActivatedWindow found, trying last activated tab id');
-                self.chr.tabs.query({
-                  'active': true
-                }, tabs => {
-                  tab = tabs.filter(t => t.id == self.lastActivatedTabId)[0];
-                  if (tab) {
-                    resolve(tab);
-                  } else {
-                    self.log('No active tab found with the lastActivatedTabId found');
-                  }
-                });
-              } else {
-                self.log('No active tab in lastActivatedWindow found and last activated tab id is not set');
-              }
+              self.log('No active tab in lastActivatedWindow found and last activated tab id is not set');
             }
-          });
+          }
         });
+      });
       return promise;
     }
 
     getAllTabs() {
       const self = this;
       const promise = new Promise((resolve, reject) => {
-          if (!self.chr.tabs?.query) {
-            reject("This platform doesn't support the querying tabs API!");
-            return;
-          };
-          self.chr.tabs.query({}, resolve);
-        });
+        if (!self.chr.tabs?.query) {
+          reject("This platform doesn't support the querying tabs API!");
+          return;
+        };
+        self.chr.tabs.query({}, resolve);
+      });
       return promise;
     }
 
     getBackgroundPage() {
       const self = this;
       const promise = new Promise((resolve, reject) => {
-          if (!self.chr.runtime?.getBackgroundPage) {
-            reject("This platform doesn't support the get background page API!");
-            return;
-          };
-          self.chr.runtime.getBackgroundPage(resolve);
-        });
+        if (!self.chr.runtime?.getBackgroundPage) {
+          reject("This platform doesn't support the get background page API!");
+          return;
+        };
+        self.chr.runtime.getBackgroundPage(resolve);
+      });
       return promise;
     }
 
     setUrl(tabId, url) {
       const self = this;
       const promise = new Promise((resolve, reject) => {
-          if (!self.chr.tabs?.update) {
-            reject("This platform doesn't support the update tabs API!");
-            return;
-          };
-          self.pushUrlForTab(tabId, url).then(() => {
-            self.chr.tabs.update(tabId, {
-              url
-            }, resolve);
-          });
+        if (!self.chr.tabs?.update) {
+          reject("This platform doesn't support the update tabs API!");
+          return;
+        };
+        self.pushUrlForTab(tabId, url).then(() => {
+          self.chr.tabs.update(tabId, {
+            url
+          }, resolve);
         });
+      });
       return promise;
     }
 
     notify(options) {
       if (!options)
         return;
-      if (typeof(options) == "string") {
+      if (typeof (options) == "string") {
         options = {
           message: options
         };
@@ -383,44 +383,44 @@
       const self = this;
       const browser = ApiWrapper.getBrowser();
       const promise = new Promise((resolve, reject) => {
-          if (!self.chr.notifications?.create) {
-            reject("This platform doesn't support the create notifications API!");
-            return;
-          };
-          const notifOpts = {
-            type: "basic",
-            title: (options.title || "Bookmark Surfer Daedalus"),
-            message: (options.message || ''),
-            iconUrl: "images/bigIcon.png"
-          };
-          if (!browser.isFirefox) {
-            notifOpts.requireInteraction = !!options.requireInteraction;
+        if (!self.chr.notifications?.create) {
+          reject("This platform doesn't support the create notifications API!");
+          return;
+        };
+        const notifOpts = {
+          type: "basic",
+          title: (options.title || "Bookmark Surfer Daedalus"),
+          message: (options.message || ''),
+          iconUrl: "images/bigIcon.png"
+        };
+        if (!browser.isFirefox) {
+          notifOpts.requireInteraction = !!options.requireInteraction;
+        }
+        if (options.items?.length) {
+          notifOpts.type = "list";
+          notifOpts.items = options.items.map(text => ({
+            title: '',
+            message: text
+          }));
+        }
+        if (options.buttons?.length) {
+          if (browser.isFirefox || browser.isOpera) {
+            self.log("Notification buttons in Firefox and Opera do not work.");
+          } else {
+            notifOpts.buttons = options.buttons.map(btn => ({
+              title: btn.title,
+              iconUrl: btn.iconUrl
+            }));
           }
-          if (options.items?.length) {
-            notifOpts.type = "list";
-            notifOpts.items = options.items.map(text => ({
-                  title: '',
-                  message: text
-                }));
-          }
+        }
+        self.chr.notifications.create(null, notifOpts, notificationId => {
           if (options.buttons?.length) {
-            if (browser.isFirefox || browser.isOpera) {
-              self.log("Notification buttons in Firefox and Opera do not work.");
-            } else {
-              notifOpts.buttons = options.buttons.map(btn => ({
-                    title: btn.title,
-                    iconUrl: btn.iconUrl
-                  }));
-            }
+            self.notifications[notificationId] = options;
           }
-          self.chr.notifications.create(null, notifOpts, notificationId => {
-            if (options.buttons?.length) {
-              self.notifications[notificationId] = options;
-            }
-            options.notificationId = notificationId;
-            resolve(notificationId);
-          });
+          options.notificationId = notificationId;
+          resolve(notificationId);
         });
+      });
       return promise;
     }
 
@@ -429,91 +429,91 @@
         return;
       const self = this;
       const promise = new Promise((resolve, reject) => {
-          if (!self.chr.notifications?.clear) {
-            reject("This platform doesn't support the clear notifications API!");
-            return;
-          };
-          self.chr.notifications.clear(id, resolve);
-        });
+        if (!self.chr.notifications?.clear) {
+          reject("This platform doesn't support the clear notifications API!");
+          return;
+        };
+        self.chr.notifications.clear(id, resolve);
+      });
       return promise;
     }
 
     getDataSize(key) {
       const self = this;
       const promise = new Promise((resolve, reject) => {
-          if (!self.chr.storage?.local?.getBytesInUse) {
-            reject("This platform doesn't support the local storage get bytes in use API!");
-            return;
-          };
-          self.chr.storage.local.getBytesInUse(key, resolve);
-        });
+        if (!self.chr.storage?.local?.getBytesInUse) {
+          reject("This platform doesn't support the local storage get bytes in use API!");
+          return;
+        };
+        self.chr.storage.local.getBytesInUse(key, resolve);
+      });
       return promise;
     }
 
     getData(key) {
       const self = this;
       const promise = new Promise((resolve, reject) => {
-          if (!self.chr.storage?.local?.get) {
-            reject("This platform doesn't support the local storage get data API!");
-            return;
-          };
-          self.chr.storage.local.get(key, data => {
-            data?.[key] ? resolve(data[key]) : resolve();
-          });
+        if (!self.chr.storage?.local?.get) {
+          reject("This platform doesn't support the local storage get data API!");
+          return;
+        };
+        self.chr.storage.local.get(key, data => {
+          data?.[key] ? resolve(data[key]) : resolve();
         });
+      });
       return promise;
     }
 
     setData(key, value) {
       const self = this;
       const promise = new Promise((resolve, reject) => {
-          if (!self.chr.storage?.local?.set) {
-            reject("This platform doesn't support the local storage set data API!");
-            return;
-          };
-          const obj = {};
-          obj[key] = value;
-          self.chr.storage.local.set(obj, resolve);
-        });
+        if (!self.chr.storage?.local?.set) {
+          reject("This platform doesn't support the local storage set data API!");
+          return;
+        };
+        const obj = {};
+        obj[key] = value;
+        self.chr.storage.local.set(obj, resolve);
+      });
       return promise;
     }
 
     removeData(key, value) {
       const self = this;
       const promise = new Promise((resolve, reject) => {
-          if (!self.chr.storage?.local?.remove) {
-            reject("This platform doesn't support the local storage remove data API!");
-            return;
-          };
-          const obj = {};
-          obj[key] = value;
-          self.chr.storage.local.remove(key, resolve);
-        });
+        if (!self.chr.storage?.local?.remove) {
+          reject("This platform doesn't support the local storage remove data API!");
+          return;
+        };
+        const obj = {};
+        obj[key] = value;
+        self.chr.storage.local.remove(key, resolve);
+      });
       return promise;
     }
 
     expandSettings(settings = {}) {
       const data = {
-        prevNextContext: typeof(settings.prevNextContext) == 'undefined' ? false : !!settings.prevNextContext,
-        hideSkipButton: typeof(settings.hideSkipButton) == 'undefined' ? false : !!settings.hideSkipButton,
-        manageContext: typeof(settings.manageContext) == 'undefined' ? false : !!settings.manageContext,
-        readLaterContext: typeof(settings.readLaterContext) == 'undefined' ? true : !!settings.readLaterContext,
+        prevNextContext: typeof (settings.prevNextContext) == 'undefined' ? false : !!settings.prevNextContext,
+        hideSkipButton: typeof (settings.hideSkipButton) == 'undefined' ? false : !!settings.hideSkipButton,
+        manageContext: typeof (settings.manageContext) == 'undefined' ? false : !!settings.manageContext,
+        readLaterContext: typeof (settings.readLaterContext) == 'undefined' ? true : !!settings.readLaterContext,
         readLaterFolderName: settings.readLaterFolderName || 'Read Later',
-        readLaterPageTimeout:  + (settings.readLaterPageTimeout) || 10000,
-        storeAllDeletedBookmarks: typeof(settings.storeAllDeletedBookmarks) == 'undefined' ? true : !!settings.storeAllDeletedBookmarks,
-        daysAutoClearDeleted:  + (settings.daysAutoClearDeleted) || 0,
-        enableBookmarkPage: typeof(settings.enableBookmarkPage) == 'undefined' ? false : !!settings.enableBookmarkPage,
-        confirmBookmarkPage: typeof(settings.confirmBookmarkPage) == 'undefined' ? true : !!settings.confirmBookmarkPage,
-        preloadNext: typeof(settings.preloadNext) == 'undefined' ? true : !!settings.preloadNext,
-        showCurrentIndex: typeof(settings.showCurrentIndex) == 'undefined' ? true : !!settings.showCurrentIndex,
-        showDuplicateNotifications: typeof(settings.showDuplicateNotifications) == 'undefined' ? true : !!settings.showDuplicateNotifications,
-        skipPageNotBookmarkedOnNavigate: typeof(settings.skipPageNotBookmarkedOnNavigate) == 'undefined' ? false : !!settings.skipPageNotBookmarkedOnNavigate,
+        readLaterPageTimeout: + (settings.readLaterPageTimeout) || 10000,
+        storeAllDeletedBookmarks: typeof (settings.storeAllDeletedBookmarks) == 'undefined' ? true : !!settings.storeAllDeletedBookmarks,
+        daysAutoClearDeleted: + (settings.daysAutoClearDeleted) || 0,
+        enableBookmarkPage: typeof (settings.enableBookmarkPage) == 'undefined' ? false : !!settings.enableBookmarkPage,
+        confirmBookmarkPage: typeof (settings.confirmBookmarkPage) == 'undefined' ? true : !!settings.confirmBookmarkPage,
+        preloadNext: typeof (settings.preloadNext) == 'undefined' ? true : !!settings.preloadNext,
+        showCurrentIndex: typeof (settings.showCurrentIndex) == 'undefined' ? true : !!settings.showCurrentIndex,
+        showDuplicateNotifications: typeof (settings.showDuplicateNotifications) == 'undefined' ? true : !!settings.showDuplicateNotifications,
+        skipPageNotBookmarkedOnNavigate: typeof (settings.skipPageNotBookmarkedOnNavigate) == 'undefined' ? false : !!settings.skipPageNotBookmarkedOnNavigate,
         urlComparisonSchema: ApiWrapper.isValidUrlComparisonSchema(settings.urlComparisonSchema) ?
-        settings.urlComparisonSchema :
-`${ApiWrapper.urlComparisonDefault} host, path\r\n#examples:\r\n#www.somedomain.com scheme, host, path, params, hash\r\n#/documents path, hash`,
-        showBlogInvitation: typeof(settings.showBlogInvitation) == 'undefined' ? true : !!settings.showBlogInvitation,
+          settings.urlComparisonSchema :
+          `${ApiWrapper.urlComparisonDefault} host, path\r\n#examples:\r\n#www.somedomain.com scheme, host, path, params, hash\r\n#/documents path, hash`,
+        showBlogInvitation: typeof (settings.showBlogInvitation) == 'undefined' ? true : !!settings.showBlogInvitation,
         lastShownBlogInvitation: settings.lastShownBlogInvitation,
-        cleanUrls: typeof(settings.cleanUrls) == 'undefined' ? true : !!settings.cleanUrls
+        cleanUrls: typeof (settings.cleanUrls) == 'undefined' ? true : !!settings.cleanUrls
       };
       return data;
     }
@@ -521,7 +521,7 @@
     async getSettings() {
       const self = this;
       let data = await self.getData(self.settingsKey)
-        data = self.expandSettings(data);
+      data = self.expandSettings(data);
       if (JSON.stringify(data) != JSON.stringify(ApiWrapper._prevSettings)) {
         ApiWrapper.refreshCache();
         ApiWrapper._prevSettings = data;
@@ -540,21 +540,21 @@
     setIcon(tabId, icon) {
       const self = this;
       const promise = new Promise((resolve, reject) => {
-          const action = self.chr.browserAction || self.chr.pageAction || self.chr.action;
-          if (!action?.setIcon) {
-            reject("This platform doesn't support the set icon API!");
-            return;
-          };
-          action.setIcon({
-            path: {
-              '19': icon
-            },
-            tabId
-          }, function () {
-            self.log(self.getError());
-            return resolve.apply(this, arguments)
-          });
+        const action = self.chr.browserAction || self.chr.pageAction || self.chr.action;
+        if (!action?.setIcon) {
+          reject("This platform doesn't support the set icon API!");
+          return;
+        };
+        action.setIcon({
+          path: {
+            '19': icon
+          },
+          tabId
+        }, function () {
+          self.log(self.getError());
+          return resolve.apply(this, arguments)
         });
+      });
       return promise;
     }
 
@@ -563,8 +563,8 @@
       const action = self.chr.browserAction || self.chr.pageAction || self.chr.action;
       if (action) {
         const f = value
-           ? action.show || action.enable
-           : action.hide || action.disable;
+          ? action.show || action.enable
+          : action.hide || action.disable;
         f(tabId);
         self.log(self.getError());
       }
@@ -594,7 +594,7 @@
         color,
         tabId: id
       });
-      
+
     }
 
     setTitle(tabId, text) {
@@ -603,7 +603,7 @@
       if (!action?.setTitle) {
         throw new Error("This platform doesn't support the set title API!");
       };
-      const id =  + (tabId);
+      const id = + (tabId);
       if (id) {
         action.setTitle({
           title: `${text || ''}`,
@@ -632,79 +632,79 @@
     getTabById(tabId) {
       const self = this;
       const promise = new Promise((resolve, reject) => {
-          if (!self.chr.tabs?.get) {
-            reject("This platform doesn't support the get tabs API!");
-            return;
-          };
-          self.chr.tabs.get(tabId, tab => {
-            tab ? resolve(tab) : self.log(`Error getting tab ${tabId}: ${self.getError()}`);
-          });
+        if (!self.chr.tabs?.get) {
+          reject("This platform doesn't support the get tabs API!");
+          return;
+        };
+        self.chr.tabs.get(tabId, tab => {
+          tab ? resolve(tab) : self.log(`Error getting tab ${tabId}: ${self.getError()}`);
         });
+      });
       return promise;
     }
 
     getTabsByUrl(url) {
       const self = this;
       const promise = new Promise((resolve, reject) => {
-          if (!self.chr.tabs?.query) {
-            reject("This platform doesn't support the query tabs API!");
-            return;
-          };
-          const browser = ApiWrapper.getBrowser();
-          if (browser.isFirefox) {
-            url = url.replace(/^moz-extension/, '*');
-          }
-          if (browser.isOpera) {
-            url = url.replace(/^opera/, '*');
-          }
-          self.chr.tabs.query({
-            url: `${url}*`
-          }, resolve);
-        });
+        if (!self.chr.tabs?.query) {
+          reject("This platform doesn't support the query tabs API!");
+          return;
+        };
+        const browser = ApiWrapper.getBrowser();
+        if (browser.isFirefox) {
+          url = url.replace(/^moz-extension/, '*');
+        }
+        if (browser.isOpera) {
+          url = url.replace(/^opera/, '*');
+        }
+        self.chr.tabs.query({
+          url: `${url}*`
+        }, resolve);
+      });
       return promise;
     }
 
     newTab(url, notActive) {
       const self = this;
       const promise = new Promise((resolve, reject) => {
-          if (!self.chr.tabs?.create) {
-            reject("This platform doesn't support the create tabs API!");
-            return;
-          };
-          self.chr.tabs.create({
-            url,
-            active: !notActive
-          }, resolve);
-        });
+        if (!self.chr.tabs?.create) {
+          reject("This platform doesn't support the create tabs API!");
+          return;
+        };
+        self.chr.tabs.create({
+          url,
+          active: !notActive
+        }, resolve);
+      });
       return promise;
     }
 
     closeTab(tabId) {
       const self = this;
       const promise = new Promise((resolve, reject) => {
-          if (!self.chr.tabs?.remove) {
-            reject("This platform doesn't support the remove tabs API!");
-            return;
-          };
-          self.chr.tabs.remove(tabId, function () {
-            self.log(self.getError());
-            return resolve.apply(this, arguments)
-          });
+        if (!self.chr.tabs?.remove) {
+          reject("This platform doesn't support the remove tabs API!");
+          return;
+        };
+        self.chr.tabs.remove(tabId, function () {
+          self.log(self.getError());
+          return resolve.apply(this, arguments)
         });
+      });
       return promise;
     }
 
     setSelected(tabId) {
       const self = this;
       const promise = new Promise((resolve, reject) => {
-          if (!self.chr.tabs?.update) {
-            reject("This platform doesn't support the update tabs API!");
-            return;
-          };
-          self.chr.tabs.update(tabId, {
-            active: true
-          }, resolve);
-        });
+        if (!self.chr.tabs?.update) {
+          reject("This platform doesn't support the update tabs API!");
+          return;
+        };
+        self.chr.tabs.update(tabId, {
+          active: true
+        }, resolve);
+      });
       return promise;
     }
 
@@ -721,12 +721,12 @@
     getTree() {
       const self = this;
       const promise = new Promise((resolve, reject) => {
-          if (!self.chr.bookmarks) {
-            reject("This platform doesn't support the bookmarks API!");
-            return;
-          }
-          self.chr.bookmarks.getTree(resolve);
-        });
+        if (!self.chr.bookmarks) {
+          reject("This platform doesn't support the bookmarks API!");
+          return;
+        }
+        self.chr.bookmarks.getTree(resolve);
+      });
       return promise;
     }
 
@@ -825,17 +825,17 @@
         return;
       };
       const promise = new Promise((resolve, reject) => {
-          self.getBookmarksByIds(ids).then(bms => {
-            let k = bms.length;
-            bms.forEach(bm => {
-              self.chr.bookmarks.remove(bm.id, () => {
-                k--;
-                if (k == 0)
-                  resolve(bms);
-              });
+        self.getBookmarksByIds(ids).then(bms => {
+          let k = bms.length;
+          bms.forEach(bm => {
+            self.chr.bookmarks.remove(bm.id, () => {
+              k--;
+              if (k == 0)
+                resolve(bms);
             });
           });
         });
+      });
 
       return promise;
     }
@@ -851,38 +851,38 @@
       }
       const self = this;
       const promise = new Promise((resolve, reject) => {
-          if (!self.chr.bookmarks?.create) {
-            reject("This platform doesn't support the create bookmarks API!");
-            return;
-          };
-          const nodes = [];
-          let k = bms.length;
-          bms.forEach(bm => {
-            self.chr.bookmarks.create({
-              parentId: bm.parentId,
-              index: bm.index,
-              title: bm.title,
-              url: bm.url
-            }, node => {
-              nodes.push(node);
-              k--;
-              if (k == 0)
-                resolve(withArray ? nodes : nodes[0]);
-            });
+        if (!self.chr.bookmarks?.create) {
+          reject("This platform doesn't support the create bookmarks API!");
+          return;
+        };
+        const nodes = [];
+        let k = bms.length;
+        bms.forEach(bm => {
+          self.chr.bookmarks.create({
+            parentId: bm.parentId,
+            index: bm.index,
+            title: bm.title,
+            url: bm.url
+          }, node => {
+            nodes.push(node);
+            k--;
+            if (k == 0)
+              resolve(withArray ? nodes : nodes[0]);
           });
         });
+      });
       return promise;
     }
 
     updateBookmark(id, changes) {
       const self = this;
       const promise = new Promise((resolve, reject) => {
-          if (!self.chr.bookmarks?.update) {
-            reject("This platform doesn't support the update bookmarks API!");
-            return;
-          };
-          self.chr.bookmarks.update(id, changes, resolve);
-        });
+        if (!self.chr.bookmarks?.update) {
+          reject("This platform doesn't support the update bookmarks API!");
+          return;
+        };
+        self.chr.bookmarks.update(id, changes, resolve);
+      });
       return promise;
     }
 
@@ -897,9 +897,9 @@
       }
       const now = new Date();
       const newbms = arr.bookmarks.filter(obj => {
-          const time = obj.time || new Date('2016-06-26').getTime();
-          return (now - time) <= 86400000 * settings.daysAutoClearDeleted;
-        });
+        const time = obj.time || new Date('2016-06-26').getTime();
+        return (now - time) <= 86400000 * settings.daysAutoClearDeleted;
+      });
       if (newbms.length == arr.bookmarks.length) {
         return;
       }
@@ -960,14 +960,14 @@
     async removeAllDeletedBookmarks() {
       const self = this;
       const arr = {
-        bookmarks : []
+        bookmarks: []
       };
       return await self.setData(self.deletedBookmarksKey, arr);
     }
 
     createMenuItem(id, title, parentId) {
       let contexts = ["all"];
-      if (typeof(id) == 'object') {
+      if (typeof (id) == 'object') {
         const options = id;
         id = options.id;
         title = options.title;
@@ -976,114 +976,114 @@
       }
       const self = this;
       const promise = new Promise((resolve, reject) => {
-          if (!self.chr.contextMenus?.create) {
-            reject("This platform doesn't support the create context menu API!");
-            return;
-          };
-          const itm = {
-            "id": id,
-            "title": title,
-            "contexts": contexts
-          };
-          if (parentId)
-            itm.parentId = parentId;
-          self.chr.contextMenus.create(itm, () => {
-            self.log(self.getError());
-            resolve(itm);
-          });
+        if (!self.chr.contextMenus?.create) {
+          reject("This platform doesn't support the create context menu API!");
+          return;
+        };
+        const itm = {
+          "id": id,
+          "title": title,
+          "contexts": contexts
+        };
+        if (parentId)
+          itm.parentId = parentId;
+        self.chr.contextMenus.create(itm, () => {
+          self.log(self.getError());
+          resolve(itm);
         });
+      });
       return promise;
     }
 
     removeMenuItem(id) {
       const self = this;
       const promise = new Promise((resolve, reject) => {
-          if (!self.chr.contextMenus?.remove) {
-            reject("This platform doesn't support the remove context menu API!");
-            return;
-          };
-          self.chr.contextMenus.remove(id, function () {
-            self.log(self.getError());
-            resolve(arguments);
-          });
+        if (!self.chr.contextMenus?.remove) {
+          reject("This platform doesn't support the remove context menu API!");
+          return;
+        };
+        self.chr.contextMenus.remove(id, function () {
+          self.log(self.getError());
+          resolve(arguments);
         });
+      });
       return promise;
     }
 
     sendMessage(data) {
       const self = this;
       const promise = new Promise((resolve, reject) => {
-          if (!self.chr.runtime?.sendMessage) {
-            reject("This platform doesn't support the runtime sendMessage API!");
-            return;
-          };
-          const d = data || {};
-          let time = 0;
-          if (self.sendMessageInterval) {
-            clearInterval(self.sendMessageInterval);
-          }
-          const f = () => {
-            self.chr.runtime.sendMessage(null, d, null, function (val) {
-              self.log(self.getError());
-              if (val === undefined)
-                return;
-              setTimeout(() => {
-                clearInterval(self.sendMessageInterval);
-              }, 50);
-              resolve.apply(this, arguments);
-            });
-            time += 100;
-            if (time >= self.sendMessageTimeout) {
-              if (self.sendMessageInterval) {
-                clearInterval(self.sendMessageInterval);
-              }
-              resolve();
+        if (!self.chr.runtime?.sendMessage) {
+          reject("This platform doesn't support the runtime sendMessage API!");
+          return;
+        };
+        const d = data || {};
+        let time = 0;
+        if (self.sendMessageInterval) {
+          clearInterval(self.sendMessageInterval);
+        }
+        const f = () => {
+          self.chr.runtime.sendMessage(null, d, null, function (val) {
+            self.log(self.getError());
+            if (val === undefined)
+              return;
+            setTimeout(() => {
+              clearInterval(self.sendMessageInterval);
+            }, 50);
+            resolve.apply(this, arguments);
+          });
+          time += 100;
+          if (time >= self.sendMessageTimeout) {
+            if (self.sendMessageInterval) {
+              clearInterval(self.sendMessageInterval);
             }
-          };
-          f();
-          if (!data?.sendOnce) {
-            self.sendMessageInterval = setInterval(f, 100);
+            resolve();
           }
-        });
+        };
+        f();
+        if (!data?.sendOnce) {
+          self.sendMessageInterval = setInterval(f, 100);
+        }
+      });
       return promise;
     }
 
     sendTabMessage(tabId, data) {
       const self = this;
       const promise = new Promise((resolve, reject) => {
-          if (!self.chr.tabs?.sendMessage) {
-            reject("This platform doesn't support the tabs sendMessage API!");
-            return;
-          };
-          const d = data || {};
-          let time = 0;
-          if (self.sendMessageInterval) {
-            clearInterval(self.sendMessageInterval);
-          }
-          const f = () => {
-            self.chr.tabs.sendMessage(tabId, d, null, function (val) {
-              self.log(self.getError());
-              if (val === undefined)
-                return;
-              setTimeout(() => {
-                clearInterval(self.sendMessageInterval);
-              }, 50);
-              resolve.apply(this, arguments);
-            });
-            time += 100;
-            if (time >= self.sendMessageTimeout) {
-              if (self.sendMessageInterval) {
-                clearInterval(self.sendMessageInterval);
-              }
-              resolve();
+        if (!self.chr.tabs?.sendMessage) {
+          reject("This platform doesn't support the tabs sendMessage API!");
+          return;
+        };
+        const d = data || {};
+        let time = 0;
+        if (self.sendMessageInterval) {
+          clearInterval(self.sendMessageInterval);
+        }
+        const f = () => {
+          self.chr.tabs.sendMessage(tabId, d, null, function (val) {
+            self.log(self.getError());
+            if (val === undefined)
+              return;
+            setTimeout(() => {
+              clearInterval(self.sendMessageInterval);
+            }, 50);
+            resolve.apply(this, arguments);
+          });
+          time += 100;
+          if (time >= self.sendMessageTimeout) {
+            if (self.sendMessageInterval) {
+              clearInterval(self.sendMessageInterval);
             }
-          };
-          if (data?.sendOnce) {
-            f();
-          } else {
-            self.sendMessageInterval = setInterval(f, 100);
+            resolve();
           }
-        });
+        };
+        if (data?.sendOnce) {
+          f();
+        } else {
+          self.sendMessageInterval = setInterval(f, 100);
+        }
+      });
       return promise;
     }
 
@@ -1138,7 +1138,7 @@
       const self = this;
       const list = await self.getListOfUrls(tabId);
       let i = list.length;
-      const f = async() => {
+      const f = async () => {
         i--;
         if (i < 0) {
           self.log(`No bookmarked tab in the history of tab ${tabId}`);
@@ -1262,20 +1262,20 @@
       if (!this.chr.runtime?.onMessage)
         return;
       const eh = new EventHandler(this.chr.runtime.onMessage, (request, sender, sendResponse) => {
-          const result = listener(request);
-          if (typeof(sendResponse) == 'function') {
-            if (result?.then) {
-              result.then(result => sendResponse({
-                  result
-                }));
-            } else {
-              sendResponse({
-                result
-              });
-            }
+        const result = listener(request);
+        if (typeof (sendResponse) == 'function') {
+          if (result?.then) {
+            result.then(result => sendResponse({
+              result
+            }));
+          } else {
+            sendResponse({
+              result
+            });
           }
-          return true;
-        });
+        }
+        return true;
+      });
       this.handlers.push(eh);
       return eh;
     }
