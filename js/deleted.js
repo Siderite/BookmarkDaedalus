@@ -99,13 +99,15 @@
             return elem;
         }
 
-        function executeMenuCommand(command) {
+        async function executeMenuCommand(command) {
             switch (command) {
                 case 'restore':
-                    restoreBookmarks()?.then(refresh);
+                    await restoreBookmarks();
+                    refresh();
                     break;
                 case 'clear':
-                    removeBookmarks()?.then(refresh);
+                    await removeBookmarks();
+                    refresh();
                     break;
             }
         }
@@ -136,7 +138,7 @@
             return api.removeDeletedBookmarksByIds(ids);
         }
 
-        function restoreBookmarks() {
+        async function restoreBookmarks() {
             let items = list.find('input[type=checkbox]:nothidden:checked');
             if (!confirm(`Are you sure you want to restore ${items.length} bookmarks?`))
                 return;
@@ -155,32 +157,25 @@
                     parentIds[bm.parentId] = true;
             });
             parentIds = Object.keys(parentIds);
-            return api.getBookmarksByIds(parentIds).then(parentBookmarks => {
-                if (!parentBookmarks || parentBookmarks.filter(bm => !!bm).length != parentIds.length) {
-                    api.getBookmarksBar().then(bar => {
-                        if (!newFolder) {
-                            newFolder = true;
-                            api.notify('Some parent bookmarks are missing, restoring in new folder on the bookmarks bar.');
-                        }
-                        api.createBookmarks({
-                            title: 'Undeleted items',
-                            parentId: bar.id
-                        }).then(parent => {
-                            bookmarks.forEach(bm => {
-                                bm.parentId = parent.id;
-                            });
-                            const ids = bookmarks.map(bm => bm.id);
-                            api.createBookmarks(bookmarks);
-                            api.removeDeletedBookmarksByIds(ids).then(notifyDone);
-                        });
-                    });
-                } else {
-                    const ids = bookmarks.map(bm => bm.id);
-                    api.createBookmarks(bookmarks).then(() => {
-                        api.removeDeletedBookmarksByIds(ids).then(notifyDone);
-                    });
+            const parentBookmarks = await api.getBookmarksByIds(parentIds);
+            if (!parentBookmarks || parentBookmarks.filter(bm => !!bm).length != parentIds.length) {
+                const bar = await api.getBookmarksBar();
+                if (!newFolder) {
+                    newFolder = true;
+                    api.notify('Some parent bookmarks are missing, restoring in new folder on the bookmarks bar.');
                 }
-            });
+                const parent = await api.createBookmarks({
+                    title: 'Undeleted items',
+                    parentId: bar.id
+                });
+                bookmarks.forEach(bm => {
+                    bm.parentId = parent.id;
+                });
+            }
+            const ids = bookmarks.map(bm => bm.id);
+            await api.createBookmarks(bookmarks);
+            const bms = await api.removeDeletedBookmarksByIds(ids)
+            notifyDone(bms);
         }
 
         menu.contextMenu({
@@ -192,43 +187,40 @@
             divStats.text(`(${stats.count} items in ${Math.round(stats.size/102.4)/10} KB)`);
         }
 
-        function refresh() {
+        async function refresh() {
             $(context).trigger('refresh');
             list.empty();
             const stats = {
                 count: 0,
                 size: 0
             };
-            api.getDeletedBookmarks().then(bookmarks => {
-                api.getDeletedBookmarksSize().then(size => {
-                    stats.size = size;
-                    refreshStats(stats);
-                });
-                if (!bookmarks || !bookmarks.length) {
-                    imgMenu.hide();
-                    imgToggleAll.hide();
-                    liRestore.hide();
-                    liClearAll.hide();
-                    header.text('No deleted bookmarks found');
-                    divFilter.hide();
-                    return;
-                }
-                imgMenu.show();
-                imgToggleAll.show();
+            const bookmarks = await api.getDeletedBookmarks();
+            const size = await api.getDeletedBookmarksSize();
+            stats.size = size;
+            refreshStats(stats);
+            if (!bookmarks?.length) {
+                imgMenu.hide();
+                imgToggleAll.hide();
                 liRestore.hide();
-                liClearAll.show();
-                divFilter.show();
-                header.text('Deleted bookmarks');
-                bookmarks.reverse().forEach((obj, idx) => {
-                    const bms = obj.length ? obj : obj.items;
-                    stats.count += bms.length;
-                    api.getBookmarksByIds(bms.map(bm => bm.parentId)).then(parents => {
-                        const title = parents.length ? parents[0].title : 'Unknown folder';
-                        createTree(bms, title, obj.time);
-                        if (idx == 0) list.trigger('filter');
-                    });
-                })
-            });
+                liClearAll.hide();
+                header.text('No deleted bookmarks found');
+                divFilter.hide();
+                return;
+            }
+            imgMenu.show();
+            imgToggleAll.show();
+            liRestore.hide();
+            liClearAll.show();
+            divFilter.show();
+            header.text('Deleted bookmarks');
+            bookmarks.reverse().forEach(async (obj, idx) => {
+                const bms = obj.length ? obj : obj.items;
+                stats.count += bms.length;
+                const parents = await api.getBookmarksByIds(bms.map(bm => bm.parentId));
+                const title = parents.length ? parents[0].title : 'Unknown folder';
+                createTree(bms, title, obj.time);
+                if (idx == 0) list.trigger('filter');
+            })
         }
 
         let refreshTimeout = null;

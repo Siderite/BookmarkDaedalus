@@ -573,28 +573,28 @@
     setBadge(tabId, text, color) {
       const self = this;
       color = color || 'black';
-      const action = self.chr.browserAction;
-      if (action) {
-        const id =  + (tabId);
-        if (id) {
-          if (!action.setBadgeText) {
-            throw new Error("This platform doesn't support the set badge text API!");
-          };
-          action.setBadgeText({
-            text: `${text || ''}`,
-            tabId: id
-          });
-          if (!action.setBadgeBackgroundColor) {
-            throw new Error("This platform doesn't support the set badge background color API!");
-          };
-          action.setBadgeBackgroundColor({
-            color,
-            tabId: id
-          });
-        }
-      } else {
-        console.warn("This platform doesn't support browserAction");
+      const action = self.chr.browserAction || self.chr.action;
+      if (!action) {
+        console.warn("This platform doesn't support browserAction/action");
+        return;
       }
+      const id = +(tabId);
+      if (!id) return;
+      if (!action.setBadgeText) {
+        throw new Error("This platform doesn't support the set badge text API!");
+      };
+      action.setBadgeText({
+        text: `${text || ''}`,
+        tabId: id
+      });
+      if (!action.setBadgeBackgroundColor) {
+        throw new Error("This platform doesn't support the set badge background color API!");
+      };
+      action.setBadgeBackgroundColor({
+        color,
+        tabId: id
+      });
+      
     }
 
     setTitle(tabId, text) {

@@ -1,7 +1,7 @@
 (function($) {
 
     const global = this;
-    const context = global.testContext && global.testContext.document || global.document;
+    const context = global.testContext?.document || global.document;
 
     $.fn.contextMenu = function(options) {
         const target = $(this);
@@ -142,7 +142,7 @@
                             });
                             let visible = true;
                             splits.forEach(s => {
-                                visible = visible && content.includes(s);
+                                visible &&= content.includes(s);
                             });
                             itm.toggle(visible);
                         });
