@@ -64,7 +64,7 @@
                   refresh(data);
                   return;
               }
-              if (currentData && currentData.folder && data && data.folder && currentData.folder.id == data.folder.id) {
+              if (currentData?.folder && data?.folder && currentData.folder.id == data.folder.id) {
                   refresh(data);
               } else {
                   refreshFromCurrent();
@@ -72,19 +72,19 @@
             }
         });
 
-        function refreshFromCurrent() {
-            if (!currentData || !currentData.current) {
+        async function refreshFromCurrent() {
+            if (!currentData?.current) {
                 refresh();
             } else {
-                api.sendMessage({action:'getInfo', url: currentData.current.url}).then(data => {
-                    api.sendMessage({ action: 'handleDuplicates', arr:data?.result }).then(refresh);
-                });
+                const tabInfo = await api.sendMessage({action:'getInfo', url: currentData.current.url});
+                const data = await api.sendMessage({ action: 'handleDuplicates', arr:tabInfo?.result });
+                refresh(data);
             }
         }
 
         let last = 0;
 
-        function refresh(data) {
+        async function refresh(data) {
             const sdata = data ? JSON.stringify(data) : null;
             if (sdata == last)
                 return;
@@ -101,7 +101,7 @@
             });
             divFilter.hide();
             tree.empty();
-            if (!data || !data.folder) {
+            if (!data?.folder) {
                 header.text('Bookmark for the URL not found');
                 subheader.text('Move to a tab that has been bookmarked to populate this page.');
                 refreshMenuOptions();
@@ -114,21 +114,20 @@
             tree.find('input[type=checkbox]').click(() => {
                 refreshMenuOptions(true);
             });
-            api.getUrlComparisonSchema().then(schema => {
-                const urlOptions = ApiWrapper.getUrlOptions(data.current.url, schema);
-                tree.find('a').each(function() {
-                    const anchorUrlOptions = ApiWrapper.getUrlOptions($(this).attr('href'), schema);
-                    if (ApiWrapper.compareUrlOptions(anchorUrlOptions, urlOptions).different)
-                        return;
+            const schema = await api.getUrlComparisonSchema();
+            const urlOptions = ApiWrapper.getUrlOptions(data.current.url, schema);
+            tree.find('a').each(function() {
+                const anchorUrlOptions = ApiWrapper.getUrlOptions($(this).attr('href'), schema);
+                if (ApiWrapper.compareUrlOptions(anchorUrlOptions, urlOptions).different)
+                    return;
 
-                    const par = $(this).parent();
-                    par.addClass('selected');
-                });
-                tree.find('.selected:visible').bringIntoView({
-                    parent: tree
-                });
-                tree.trigger('filter');
+                const par = $(this).parent();
+                par.addClass('selected');
             });
+            tree.find('.selected:visible').bringIntoView({
+                parent: tree
+            });
+            tree.trigger('filter');
         }
 
         function createTree(folder, checkData) {
@@ -159,7 +158,7 @@
                     })
                     .appendTo(elem);
                 chk.data('id', itm.id);
-                if (checkData && checkData[itm.id]) {
+                if (checkData?.[itm.id]) {
                     chk.prop('checked', true);
                 }
                 elem.click(ev => {
@@ -189,29 +188,27 @@
             return false;
         }
 
-        function refreshMenuOptions(ignoreDuplicates) {
-            api.getUrlComparisonSchema().then(schema => {
-                const hasData = !!(currentData && currentData.folder);
-                let hasDuplicates = false;
-                if (!ignoreDuplicates && hasData) {
-                    hasDuplicates = anyDuplicates(currentData.folder.children, schema);
-                }
-                imgToggleAll.toggleClass('visible', hasData);
-                imgToggleBefore.toggleClass('visible', hasData);
-                imgSelectDuplicates.toggleClass('visible', hasData && hasDuplicates);
-                spnHoldFolder.toggle(hasData);
-                const ul = tree.find('>ul');
-                const checkedInputs = ul.find('input:nothidden:checked');
-                liRemoveBookmarks.toggle(!!checkedInputs.length);
-                liMoveToEndBookmarks.toggle(!!checkedInputs.length);
-                liMoveToStartBookmarks.toggle(!!checkedInputs.length);
+        async function refreshMenuOptions(ignoreDuplicates) {
+            const schema = await api.getUrlComparisonSchema();
+            const hasData = !!(currentData?.folder);
+            let hasDuplicates = false;
+            if (!ignoreDuplicates && hasData) {
+                hasDuplicates = anyDuplicates(currentData.folder.children, schema);
+            }
+            imgToggleAll.toggleClass('visible', hasData);
+            imgToggleBefore.toggleClass('visible', hasData);
+            imgSelectDuplicates.toggleClass('visible', hasData && hasDuplicates);
+            spnHoldFolder.toggle(hasData);
+            const ul = tree.find('>ul');
+            const checkedInputs = ul.find('input:nothidden:checked');
+            liRemoveBookmarks.toggle(!!checkedInputs.length);
+            liMoveToEndBookmarks.toggle(!!checkedInputs.length);
+            liMoveToStartBookmarks.toggle(!!checkedInputs.length);
 
-                api.getDeletedBookmarks().then(bookmarks => {
-                    liManageDeleted.toggle(!!(bookmarks && bookmarks.length));
-                });
+            const bookmarks = await api.getDeletedBookmarks();
+            liManageDeleted.toggle(!!(bookmarks?.length));
 
-                refreshCounts();
-            });
+            refreshCounts();
         }
 
         function refreshCounts() {
@@ -243,26 +240,24 @@
             }, 1);
         }
 
-        function importLinks(text) {
+        async function importLinks(text) {
             const links = text.split(/[\r\n]+/).map(url => url.replace(/^\s+/, '').replace(/\s+$/, '')).filter(url => /^\w+:\/\//.test(url));
             if (!links.length) {
                 api.notify('Nothing to import!');
                 return;
             }
-            api.getBookmarksBar().then(bar => {
-                api.createBookmarks({
-                    title: 'Imported items in the Bookmarks bar',
-                    parentId: bar.id
-                }).then(parent => {
-                    const bookmarks = links.map(lnk => ({
-                        parentId: parent.id,
-                        url: lnk,
-                        title: lnk
-                    }));
-                    api.createBookmarks(bookmarks);
-                    api.notify('Bookmarks imported');
-                });
+            const bar = await api.getBookmarksBar();
+            const parent = await api.createBookmarks({
+                title: 'Imported items in the Bookmarks bar',
+                parentId: bar.id
             });
+            const bookmarks = links.map(lnk => ({
+                parentId: parent.id,
+                url: lnk,
+                title: lnk
+            }));
+            api.createBookmarks(bookmarks);
+            api.notify('Bookmarks imported');
         }
 
         function pasteURLsFromClipboard() {
@@ -363,30 +358,30 @@
             refreshMenuOptions(true);
         }
 
-        function selectDuplicates() {
-            api.getUrlComparisonSchema().then(schema => {
-                const ul = tree.find('>ul');
-                const options = [];
-                ul.find('>li>div:nothidden').each(function() {
-                    const a = $('a', this);
-                    const chk = $('input', this);
-                    const url = a.attr('href');
-                    let checked = false;
-                    const urlOptions = ApiWrapper.getUrlOptions(url, schema);
-                    options.forEach(opt => {
-                        if (!ApiWrapper.compareUrlOptions(opt, urlOptions).different) {
-                            checked = true;
-                            return false;
-                        }
-                    });
-                    chk.prop('checked', checked);
-                    options.push(urlOptions);
+        async function selectDuplicates() {
+            const schema = await api.getUrlComparisonSchema();
+            const ul = tree.find('>ul');
+            const options = [];
+            ul.find('>li>div:nothidden').each(function() {
+                const a = $('a', this);
+                const chk = $('input', this);
+                const url = a.attr('href');
+                let checked = false;
+                const urlOptions = ApiWrapper.getUrlOptions(url, schema);
+                options.forEach(opt => {
+                    if (!ApiWrapper.compareUrlOptions(opt, urlOptions).different) {
+                        checked = true;
+                        return false;
+                    }
                 });
-                refreshMenuOptions(true);
+                chk.prop('checked', checked);
+                options.push(urlOptions);
             });
+            refreshMenuOptions(true);
+            
         }
 
-        function removeBookmarks() {
+        async function removeBookmarks() {
             const ul = tree.find('>ul');
             const inputs = ul.find('input:nothidden:checked');
             if (!inputs.length)
@@ -403,33 +398,26 @@
                     });
                 }
             });
-            api.getBookmarksByIds(ids.map(p => p.id)).then(bookmarks => {
-                api.getSettings().then(settings => {
-                    const f = () => {
-                        let k = ids.length;
-                        ids.forEach(p => {
-                            api.removeBookmarksById([p.id]).then(() => {
-                                $(p.input).closest('li').remove();
-                                k--;
-                                if (k == 0) {
-                                    tree.find('.selected:visible').bringIntoView({
-                                        parent: tree
-                                    });
-                                    refreshMenuOptions();
-                                }
-                            });
-                        });
-                    };
-                    if (settings.storeAllDeletedBookmarks) {
-                        f();
-                    } else {
-                        api.addDeletedBookmarks(bookmarks).then(f);
-                    }
-                });
+            const bookmarks = await api.getBookmarksByIds(ids.map(p => p.id));
+            const settings = await api.getSettings();
+            if (!settings.storeAllDeletedBookmarks) {
+                const deletedBms = await api.addDeletedBookmarks(bookmarks);
+            }
+            let k = ids.length;
+            ids.forEach(async (p) => {
+                await api.removeBookmarksById([p.id]);
+                $(p.input).closest('li').remove();
+                k--;
+                if (k == 0) {
+                    tree.find('.selected:visible').bringIntoView({
+                        parent: tree
+                    });
+                    refreshMenuOptions();
+                }
             });
         }
 
-        function moveToEnd() {
+        async function moveToEnd() {
             const ul = tree.find('>ul');
             const inputs = ul.find('input:nothidden:checked');
             if (!inputs.length)
@@ -446,18 +434,17 @@
                     });
                 }
             });
-            api.getBookmarksByIds(ids.map(p => p.id)).then(bookmarks => {
-                bookmarks.forEach(bm => {
-                    bm = ApiWrapper.clone(bm);
-                    delete bm.index;
-                    api.createBookmarks(bm)
-                    api.removeBookmarksById([bm.id]);
-                });
-                refreshFromCurrent();
+            const bookmarks = await api.getBookmarksByIds(ids.map(p => p.id));
+            bookmarks.forEach(bm => {
+                bm = ApiWrapper.clone(bm);
+                delete bm.index;
+                api.createBookmarks(bm)
+                api.removeBookmarksById([bm.id]);
             });
+            refreshFromCurrent();
         }
 
-        function moveToStart() {
+        async function moveToStart() {
             const ul = tree.find('>ul');
             const inputs = ul.find('input:nothidden:checked');
             if (!inputs.length)
@@ -474,16 +461,15 @@
                     });
                 }
             });
-            api.getBookmarksByIds(ids.map(p => p.id)).then(bookmarks => {
-                bookmarks.reverse();
-                bookmarks.forEach(bm => {
-                    bm = ApiWrapper.clone(bm);
-                    bm.index = 0;
-                    api.createBookmarks(bm)
-                    api.removeBookmarksById([bm.id]);
-                });
-                refreshFromCurrent();
+            const bookmarks = await api.getBookmarksByIds(ids.map(p => p.id));
+            bookmarks.reverse();
+            bookmarks.forEach(bm => {
+                bm = ApiWrapper.clone(bm);
+                bm.index = 0;
+                api.createBookmarks(bm)
+                api.removeBookmarksById([bm.id]);
             });
+            refreshFromCurrent();
         }
 
         refresh();

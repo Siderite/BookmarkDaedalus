@@ -111,7 +111,7 @@
     }
 
     static getUrlOptions(url, schema) {
-      url = url && url.trim() ? url.toLowerCase() : '';
+      url = url?.trim()?.toLowerCase() || '';
       const result = {
         options: ApiWrapper.getComparisonOptions(url, schema),
         match: url ? regUrl.exec(url) : ['', '', '', '', '']
@@ -234,19 +234,19 @@
       const self = this;
       self.handlers = [];
       self.notifications = {};
-      if (self.chr && self.chr.tabs && self.chr.tabs.onUpdated) {
+      if (self.chr?.tabs?.onUpdated) {
         self.onUpdatedTab((tabId, changeInfo, tab) => {
-          if (changeInfo && changeInfo.status == 'complete') {
+          if (changeInfo?.status == 'complete') {
             self.pushUrlForTab(tabId, tab.url);
           }
         });
       }
-      if (self.chr && self.chr.tabs && self.chr.tabs.onRemoved) {
+      if (self.chr?.tabs?.onRemoved) {
         self.onRemovedTab(tabId => {
           self.clearUrlHistory(/*tabId*/);
         });
       }
-      if (self.chr && self.chr.tabs && self.chr.tabs.onActivated) {
+      if (self.chr?.tabs?.onActivated) {
         self.onActivatedTab(data => {
           if (data.tabId)
             self.lastActivatedTabId = data.tabId;
@@ -254,12 +254,12 @@
       }
       const browser = ApiWrapper.getBrowser();
       if (!browser.isFirefox && !browser.isOpera) {
-        if (self.chr && self.chr.notifications && self.chr.notifications.onButtonClicked) {
+        if (self.chr?.notifications?.onButtonClicked) {
           self.chr.notifications.onButtonClicked.addListener((notifId, btnIdx) => {
             const options = self.notifications[notifId];
-            if (options && options.buttons) {
+            if (options?.buttons) {
               const btn = options.buttons[btnIdx];
-              if (btn && btn.clicked) {
+              if (btn?.clicked) {
                 btn.clicked();
               }
             }
@@ -396,14 +396,14 @@
           if (!browser.isFirefox) {
             notifOpts.requireInteraction = !!options.requireInteraction;
           }
-          if (options.items && options.items.length) {
+          if (options.items?.length) {
             notifOpts.type = "list";
             notifOpts.items = options.items.map(text => ({
                   title: '',
                   message: text
                 }));
           }
-          if (options.buttons && options.buttons.length) {
+          if (options.buttons?.length) {
             if (browser.isFirefox || browser.isOpera) {
               self.log("Notification buttons in Firefox and Opera do not work.");
             } else {
@@ -414,7 +414,7 @@
             }
           }
           self.chr.notifications.create(null, notifOpts, notificationId => {
-            if (options.buttons && options.buttons.length) {
+            if (options.buttons?.length) {
               self.notifications[notificationId] = options;
             }
             options.notificationId = notificationId;
@@ -458,7 +458,7 @@
             return;
           };
           self.chr.storage.local.get(key, data => {
-            data && data[key] ? resolve(data[key]) : resolve();
+            data?.[key] ? resolve(data[key]) : resolve();
           });
         });
       return promise;
@@ -1294,7 +1294,7 @@
     }
 
     getError() {
-      if (this.chr && this.chr.runtime)
+      if (this.chr?.runtime)
         return this.chr.runtime.lastError;
     }
 

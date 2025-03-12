@@ -18,7 +18,7 @@
             if (self.api.onUpdatedTab) {
                 self.api.onUpdatedTab(async (tabId, changeInfo, tab) => {
                     refresh();
-                    if (changeInfo && changeInfo.status == 'complete') {
+                    if (changeInfo?.status == 'complete') {
                         const tabInfo = await self.getInfo(tab.url);
                         const data = await self.handleDuplicates(tabInfo, tab);
                         if (tab.url == data?.current?.url) {
@@ -78,7 +78,7 @@
                             const f = bm => {
                                 if (bm.url) {
                                     bookmarksToStore.push(bm);
-                                } else if (bm.children && bm.children.length) {
+                                } else if (bm.children?.length) {
                                     bm.children.forEach(f);
                                 }
                             };
@@ -199,7 +199,7 @@
             }
             self.api.setIcon(currentTab.id, data ? 'images/icon.png' : 'images/icon-gray.png');
             self.api.toggleIcon(currentTab.id, true);
-            if (data && data.prev && settings.prevNextContext) {
+            if (data?.prev && settings.prevNextContext) {
                 let text = 'Navigate to previous bookmark ';
                 if (browser.isChrome) {
                     text += '(Ctrl-Shift-K)';
@@ -210,12 +210,12 @@
             } else {
                 self.api.removeMenuItem('prevBookmark');
             }
-            if (data && data.next && settings.prevNextContext) {
+            if (data?.next && settings.prevNextContext) {
                 self.api.createMenuItem('nextBookmark', 'Navigate to next bookmark (Ctrl-Shift-L)');
             } else {
                 self.api.removeMenuItem('nextBookmark');
             }
-            if (data && data.next && settings.prevNextContext) {
+            if (data?.next && settings.prevNextContext) {
                 self.api.createMenuItem('skipBookmark', 'Skip bookmark (move it to the end of the folder)');
             } else {
                 self.api.removeMenuItem('skipBookmark');
@@ -265,7 +265,7 @@
                 self.api.setBadge(currentTab.id, '');
                 self.api.setTitle(currentTab.id, 'Bookmark Surfer Daedalus');
             }
-            if (settings.preloadNext && data && data.next) {
+            if (settings.preloadNext && data?.next) {
                 self.preload(currentTab.id, data.next.url);
             }
         }
