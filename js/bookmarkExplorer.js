@@ -12,35 +12,35 @@
             this.init(noInitialRefresh);
         }
 
-        init(noInitialRefresh) {
+        async init(noInitialRefresh) {
             const self = this;
             const refresh = self.refresh.bind(self);
             if (self.api.onUpdatedTab) {
                 self.api.onUpdatedTab(async (tabId, changeInfo, tab) => {
-                    refresh();
+                    await refresh();
                     if (changeInfo?.status == 'complete') {
                         const tabInfo = await self.getInfo(tab.url);
                         const data = await self.handleDuplicates(tabInfo, tab);
                         if (tab.url == data?.current?.url) {
-                            self.api.notify(data.notifications);
+                            await self.api.notify(data.notifications);
                         }
                     }
                 });
             }
 
             if (self.api.onCreatedTab) {
-                self.api.onCreatedTab(() => {
-                    refresh();
+                self.api.onCreatedTab(async () => {
+                    await refresh();
                 });
             }
             if (self.api.onRemovedTab) {
-                self.api.onRemovedTab(() => {
-                    refresh();
+                self.api.onRemovedTab(async () => {
+                    await refresh();
                 });
             }
             if (self.api.onActivatedTab) {
-                self.api.onActivatedTab(() => {
-                    refresh();
+                self.api.onActivatedTab(async () => {
+                    await refresh();
                 });
             }
 
@@ -53,10 +53,10 @@
                             await self.api.updateBookmark(id, {
                                 url: newUrl
                             });
-                            refresh(true);
+                            await refresh(true);
                         }
                     } else {
-                        refresh(true);
+                        await refresh(true);
                     }
                 });
             }
@@ -66,7 +66,7 @@
                 const removeBookmarksThrottled = ApiWrapper.throttle(async () => {
                     await self.api.addDeletedBookmarks(bookmarksToStore);
                     bookmarksToStore.splice(0, 10000);
-                    refresh(true);
+                    await refresh(true);
                 });
                 self.api.onRemovedBookmark(async (id, data) => {
                     const settings = await self.api.getSettings();
@@ -86,50 +86,50 @@
                             removeBookmarksThrottled();
                         }
                     } else {
-                        refresh(true);
+                        await refresh(true);
                     }
 
                 });
             }
             if (self.api.onChangedBookmark) {
-                self.api.onChangedBookmark(() => {
-                    refresh(true);
+                self.api.onChangedBookmark(async () => {
+                    await refresh(true);
                 });
             }
             if (self.api.onMovedBookmark) {
-                self.api.onMovedBookmark(() => {
-                    refresh(true);
+                self.api.onMovedBookmark(async () => {
+                    await refresh(true);
                 });
             }
             if (self.api.onChildrenReorderedBookmark) {
-                self.api.onChildrenReorderedBookmark(() => {
-                    refresh(true);
+                self.api.onChildrenReorderedBookmark(async () => {
+                    await refresh(true);
                 });
             }
             if (self.api.onImportEndedBookmark) {
-                self.api.onImportEndedBookmark(() => {
-                    refresh(true);
+                self.api.onImportEndedBookmark(async () => {
+                    await refresh(true);
                 });
             }
 
             if (self.api.onCommand) {
-                self.api.onCommand(function () {
-                    self.execute(...arguments);
+                self.api.onCommand(async function () {
+                    await self.execute(...arguments);
                 });
             }
 
             if (self.api.onMessage) {
-                self.api.onMessage(data => {
+                self.api.onMessage(async data => {
                     if (typeof (data) == 'string') {
-                        return self.execute(data);
+                        return await self.execute(data);
                     } else {
-                        return self.execute(data.action, data);
+                        return await self.execute(data.action, data);
                     }
                 });
             }
 
             if (!noInitialRefresh) {
-                refresh();
+                await refresh();
             }
         }
 
@@ -147,26 +147,26 @@
             const currentTab = await self.api.getCurrentTab();
             const data = await self.handleDuplicates(tabInfo, currentTab);
             await self.api.selectOrNew(manageUrl);
-            self.api.sendMessage({ action: 'refresh', data: data });
+            await self.api.sendMessage({ action: 'refresh', data: data });
         }
 
-        openSettings(url) {
+        async openSettings(url) {
             const self = this;
-            self.api.openOptions();
+            await self.api.openOptions();
         }
 
-        openDeleted(url) {
+        async openDeleted(url) {
             const self = this;
             const deletedUrl = self.api.getExtensionUrl('html/deleted.html');
-            self.api.selectOrNew(deletedUrl);
+            await self.api.selectOrNew(deletedUrl);
         }
 
         async refresh(forced) {
             const self = this;
             const tab = await self.api.getCurrentTab();
             if (tab.url) {
-                self.refreshIconAndMenu(tab);
-                self.refreshManage(tab, forced);
+                await self.refreshIconAndMenu(tab);
+                await self.refreshManage(tab, forced);
             }
         }
 
@@ -176,13 +176,13 @@
             const ownUrls = [manageUrl, self.api.getExtensionUrl('html/deleted.html'), self.api.getExtensionUrl('html/settings.html'), self.api.getOptionsUrl()];
             if (ownUrls.includes(currentTab.url) || currentTab.url.startsWith('chrome:') || currentTab.url.startsWith('moz-extension:') || currentTab.url.startsWith('opera:')) {
                 if (forced || currentTab.url != manageUrl) {
-                    self.api.sendMessage("current");
+                    await self.api.sendMessage("current");
                 }
                 return;
             }
             const tabInfo = await self.getInfo(currentTab.url);
             const data = await self.handleDuplicates(tabInfo, currentTab);
-            self.api.sendMessage({ action: 'refresh', data: data });
+            await self.api.sendMessage({ action: 'refresh', data: data });
         }
 
         async refreshIconAndMenu(currentTab) {
@@ -193,11 +193,11 @@
             const tabInfo = await self.getInfo(currentTab.url);
             const data = await self.handleDuplicates(tabInfo, currentTab);
             if (settings.manageContext) {
-                self.api.createMenuItem('manage', 'Manage bookmark folder');
+                await self.api.createMenuItem('manage', 'Manage bookmark folder');
             } else {
-                self.api.removeMenuItem('manage');
+                await self.api.removeMenuItem('manage');
             }
-            self.api.setIcon(currentTab.id, data ? 'images/icon.png' : 'images/icon-gray.png');
+            await self.api.setIcon(currentTab.id, data ? 'images/icon.png' : 'images/icon-gray.png');
             self.api.toggleIcon(currentTab.id, true);
             if (data?.prev && settings.prevNextContext) {
                 let text = 'Navigate to previous bookmark ';
@@ -206,30 +206,30 @@
                 } else {
                     text += '(Ctrl-Shift-O)';
                 }
-                self.api.createMenuItem('prevBookmark', 'Navigate to previous bookmark (Ctrl-Shift-O)');
+                await self.api.createMenuItem('prevBookmark', 'Navigate to previous bookmark (Ctrl-Shift-O)');
             } else {
-                self.api.removeMenuItem('prevBookmark');
+                await self.api.removeMenuItem('prevBookmark');
             }
             if (data?.next && settings.prevNextContext) {
-                self.api.createMenuItem('nextBookmark', 'Navigate to next bookmark (Ctrl-Shift-L)');
+                await self.api.createMenuItem('nextBookmark', 'Navigate to next bookmark (Ctrl-Shift-L)');
             } else {
-                self.api.removeMenuItem('nextBookmark');
+                await self.api.removeMenuItem('nextBookmark');
             }
             if (data?.next && settings.prevNextContext) {
-                self.api.createMenuItem('skipBookmark', 'Skip bookmark (move it to the end of the folder)');
+                await self.api.createMenuItem('skipBookmark', 'Skip bookmark (move it to the end of the folder)');
             } else {
-                self.api.removeMenuItem('skipBookmark');
+                await self.api.removeMenuItem('skipBookmark');
             }
-            self.api.removeMenuItem('readLinkLater');
-            self.api.removeMenuItem('readPageLater');
+            await self.api.removeMenuItem('readLinkLater');
+            await self.api.removeMenuItem('readPageLater');
             if (settings.readLaterContext) {
-                self.api.createMenuItem({
+                await self.api.createMenuItem({
                     id: 'readLinkLater',
                     title: 'Read link later',
                     contexts: ["link"]
                 });
                 if (settings.enableBookmarkPage) {
-                    self.api.createMenuItem({
+                    await self.api.createMenuItem({
                         id: 'readPageLater',
                         title: 'Read page later',
                         contexts: ["page"]
@@ -242,20 +242,20 @@
                 });
                 const names = Object.keys(n);
                 if (names.length > 1) {
-                    names.forEach(name => {
-                        self.api.createMenuItem({
+                    for (const name of names) {
+                        await self.api.createMenuItem({
                             id: `readLinkLater ${name}`,
                             title: name,
                             parentId: 'readLinkLater',
                             contexts: ["link"]
                         });
-                        self.api.createMenuItem({
+                        await self.api.createMenuItem({
                             id: `readPageLater ${name}`,
                             title: name,
                             parentId: 'readPageLater',
                             contexts: ["page", "frame", "selection", "editable", "image", "video", "audio"]
                         });
-                    });
+                    };
                 }
             }
             if (settings.showCurrentIndex && data) {
@@ -266,7 +266,7 @@
                 self.api.setTitle(currentTab.id, 'Bookmark Surfer Daedalus');
             }
             if (settings.preloadNext && data?.next) {
-                self.preload(currentTab.id, data.next.url);
+                await self.preload(currentTab.id, data.next.url);
             }
         }
 
@@ -282,11 +282,11 @@
                 })
                 return await self.addReadLaterBookmark(bm, folderName);
             }
-            const existing = self.api.getBookmarksByUrl(bm.url, {
+            const existing = await self.api.getBookmarksByUrl(bm.url, {
                 params: true
             }, rl);
             if (existing?.length) {
-                self.api.notify('URL already added to the Read Later list');
+                await self.api.notify('URL already added to the Read Later list');
                 return existing;
             } else {
                 bm.parentId = rl.id;
@@ -308,9 +308,9 @@
             let eh = null;
             const endOperation = timeout => {
                 clearTimeout(tm);
-                tm = setTimeout(() => {
+                tm = setTimeout(async () => {
                     eh?.remove();
-                    self.api.closeTab(tab.id);
+                    await self.api.closeTab(tab.id);
                 }, timeout);
             };
             eh = self.api.onUpdatedTab(async (tabId, changeInfo, updatedTab) => {
@@ -341,14 +341,14 @@
                 if (!info) return;
                 const folderName = command.substr(m[0].length).trim() || 'Read Later';
                 if (info.linkUrl) {
-                    self.readLater(info.linkUrl, folderName);
+                    await self.readLater(info.linkUrl, folderName);
                     return;
                 }
                 const settings = await self.api.getSettings();
                 if (!info.pageUrl) return;
                 const confirmed = !settings.confirmBookmarkPage || await self.confirm(tab.id, 'No link selected. Do you want me to bookmark the current page?');
                 if (confirmed) {
-                    self.addReadLaterBookmark({
+                    await self.addReadLaterBookmark({
                         url: tab.url,
                         title: tab.title
                     }, folderName);
@@ -360,10 +360,10 @@
                     self.openManage(tab.url);
                     return true;
                 case 'settings':
-                    self.openSettings();
+                    await self.openSettings();
                     return true;
                 case 'deleted':
-                    self.openDeleted();
+                    await self.openDeleted();
                     return true;
             }
             const tabInfo = await self.getInfo(tab.url);
@@ -375,20 +375,20 @@
                         const urlInfo = await self.getInfo(url);
                         const dupData = await self.handleDuplicates(urlInfo, tab);
                         if (!dupData) {
-                            self.api.notify('Page not bookmarked');
+                            await self.api.notify('Page not bookmarked');
                             return;
                         }
                         if (!dupData.prev) {
-                            self.api.notify('Reached the start of the bookmark folder');
+                            await self.api.notify('Reached the start of the bookmark folder');
                             return;
                         }
                         const settings = await self.api.getSettings();
                         const confirmed = settings.skipPageNotBookmarkedOnNavigate || await self.confirm(tab.id, 'Page not bookmarked. Continue from last bookmarked page opened in this tab?');
                         if (confirmed) {
-                            self.api.setUrl(tab.id, dupData.prev.url);
+                            await self.api.setUrl(tab.id, dupData.prev.url);
                         }
                     } else {
-                        self.api.setUrl(tab.id, data.prev.url);
+                        await self.api.setUrl(tab.id, data.prev.url);
                     }
                     break;
                 case 'nextBookmark':
@@ -397,40 +397,40 @@
                         const urlInfo = await self.getInfo(url);
                         const dupData = await self.handleDuplicates(urlInfo, tab);
                         if (!dupData) {
-                            self.api.notify('Page not bookmarked');
+                            await self.api.notify('Page not bookmarked');
                             return;
                         }
                         if (!dupData.next) {
-                            self.api.notify('Reached the end of the bookmark folder');
+                            await self.api.notify('Reached the end of the bookmark folder');
                             return;
                         }
                         const settings = await self.api.getSettings();
                         const confirmed = settings.skipPageNotBookmarkedOnNavigate || await self.confirm(tab.id, 'Page not bookmarked. Continue from last bookmarked page opened in this tab?');
                         if (confirmed) {
-                            self.api.setUrl(tab.id, dupData.next.url);
+                            await self.api.setUrl(tab.id, dupData.next.url);
                         }
                     } else {
-                        self.api.setUrl(tab.id, data.next.url);
+                        await self.api.setUrl(tab.id, data.next.url);
                     }
                     break;
                 case 'skipBookmark':
                     if (!data) {
-                        self.api.notify('Page not bookmarked');
+                        await self.api.notify('Page not bookmarked');
                         return;
                     }
                     if (!data.next) {
-                        self.api.notify('Reached the end of the bookmark folder');
+                        await self.api.notify('Reached the end of the bookmark folder');
                         return;
                     }
                     const bm = ApiWrapper.clone(data.current);
                     delete bm.index;
-                    self.api.createBookmarks(bm)
-                    self.api.removeBookmarksById([bm.id]);
-                    self.api.setUrl(tab.id, data.next.url);
+                    await self.api.createBookmarks(bm)
+                    await self.api.removeBookmarksById([bm.id]);
+                    await self.api.setUrl(tab.id, data.next.url);
                     break;
                 case 'getInfo':
                     if (!info.url) {
-                        self.api.notify('No url sent to getInfo');
+                        await self.api.notify('No url sent to getInfo');
                         return;
                     }
                     if (info.url == tab.url) {
@@ -461,8 +461,8 @@
                 settings.showBlogInvitation = false;
                 if (!firstTime) {
                     await self.api.setSettings(settings);
-                    setTimeout(() => {
-                        self.api.notify('Find the blog entry link in the extension Options');
+                    setTimeout(async () => {
+                        await self.api.notify('Find the blog entry link in the extension Options');
                     }, 10000);
                 }
             } else {
@@ -478,10 +478,10 @@
                     {
                         title: 'Never show this again',
                         async clicked() {
-                            self.api.closeNotification(notification.notificationId);
+                            await self.api.closeNotification(notification.notificationId);
                             settings.showBlogInvitation = false;
                             await self.api.setSettings(settings);
-                            self.api.notify('Find the blog entry link in the extension Options');
+                            await self.api.notify('Find the blog entry link in the extension Options');
                         }
                     }
                     ],
@@ -491,7 +491,7 @@
                     notification.buttons.splice(1, 1);
                 }
             }
-            self.api.notify(notification);
+            await self.api.notify(notification);
         }
 
         async getInfo(url) {
@@ -550,21 +550,21 @@
                 return result;
             }
 
-            self.inviteToBlog();
+            await self.inviteToBlog();
 
             const tree = await self.api.getTree();
             const info = walk(tree);
             return info;
         }
 
-        preload(tabId, url) {
+        async preload(tabId, url) {
             const self = this;
             const time = BookmarkExplorer.preloadedUrls[url];
             const now = (new Date()).getTime();
             BookmarkExplorer.preloadedUrls[url] = now;
             if (time && now - time < 86400000)
                 return;
-            self.api.sendTabMessage(tabId, { action: 'preload', url: url });
+            await self.api.sendTabMessage(tabId, { action: 'preload', url: url });
         }
 
         async confirm(tabId, message) {

@@ -5,7 +5,7 @@
     const chrome = global.testContext && global.testContext.chrome ? global.testContext.chrome : global.chrome;
     const api = new ApiWrapper(chrome);
 
-    $(() => {
+    $(async () => {
 
         const btnPrev = $('#btnPrev', context);
         const btnSkip = $('#btnSkip', context);
@@ -14,21 +14,21 @@
         const btnSettings = $('#divHeader img', context);
         const divFolder = $('#divFolder', context);
 
-        btnPrev.click(() => {
-            api.sendMessage('prevBookmark');
+        btnPrev.click(async () => {
+            await api.sendMessage('prevBookmark');
         });
-        btnSkip.click(() => {
-            api.sendMessage('skipBookmark');
+        btnSkip.click(async () => {
+            await api.sendMessage('skipBookmark');
         });
-        btnNext.click(() => {
-            api.sendMessage('nextBookmark');
+        btnNext.click(async () => {
+            await api.sendMessage('nextBookmark');
         });
-        btnManage.click(() => {
-            api.sendMessage('manage');
+        btnManage.click(async () => {
+            await api.sendMessage('manage');
             setTimeout(window.close, 1000);
         });
-        btnSettings.click(() => {
-            api.sendMessage('settings');
+        btnSettings.click(async () => {
+            await api.sendMessage('settings');
             setTimeout(window.close, 1000);
         });
 
@@ -77,7 +77,7 @@
             }
         }
 
-        refresh();
+        await refresh();
         api.onUpdatedTab(refresh);
 
     });

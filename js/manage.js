@@ -7,7 +7,7 @@
 
     let currentData;
 
-    $(() => {
+    $(async () => {
 
         const api = new ApiWrapper(chrome);
 
@@ -49,36 +49,36 @@
                 });
                 return index;
             }
-        }).on('filter', () => {
-            refreshMenuOptions(true);
+        }).on('filter', async () => {
+            await refreshMenuOptions(true);
         });
 
-        api.onMessage(data => {
+        api.onMessage(async data => {
             if (data == 'current') {
-                refreshFromCurrent();
+                await refreshFromCurrent();
                 return;
             }
             if (data.action == 'refresh') {
                 data = data.data;
                 if (!chkHoldFolder.is(':checked')) {
-                    refresh(data);
+                    await refresh(data);
                     return;
                 }
                 if (currentData?.folder && data?.folder && currentData.folder.id == data.folder.id) {
-                    refresh(data);
+                    await refresh(data);
                 } else {
-                    refreshFromCurrent();
+                    await refreshFromCurrent();
                 }
             }
         });
 
         async function refreshFromCurrent() {
             if (!currentData?.current) {
-                refresh();
+                await refresh();
             } else {
                 const tabInfo = await api.sendMessage({ action: 'getInfo', url: currentData.current.url });
                 const data = await api.sendMessage({ action: 'handleDuplicates', arr: tabInfo?.result });
-                refresh(data);
+                await refresh(data);
             }
         }
 
@@ -104,15 +104,15 @@
             if (!data?.folder) {
                 header.text('Bookmark for the URL not found');
                 subheader.text('Move to a tab that has been bookmarked to populate this page.');
-                refreshMenuOptions();
+                await refreshMenuOptions();
                 return;
             }
             divFilter.show();
             header.text(data.folder.title);
             subheader.empty();
             createTree(data.folder, checkData);
-            tree.find('input[type=checkbox]').click(() => {
-                refreshMenuOptions(true);
+            tree.find('input[type=checkbox]').click(async () => {
+                await refreshMenuOptions(true);
             });
             const schema = await api.getUrlComparisonSchema();
             const urlOptions = ApiWrapper.getUrlOptions(data.current.url, schema);
@@ -220,7 +220,7 @@
                 '');
         }
 
-        function copyURLsToClipboard() {
+        async function copyURLsToClipboard() {
             const list = [];
             tree.find('>ul input:nothidden:checked').closest('li').find('a[href]:nothidden')
                 .each(function () {
@@ -228,7 +228,7 @@
                     list.push(href);
                 });
             if (!list.length) {
-                api.notify('No items checked!');
+                await api.notify('No items checked!');
                 return;
             }
             const data = list.join('\r\n');
@@ -243,7 +243,7 @@
         async function importLinks(text) {
             const links = text.split(/[\r\n]+/).map(url => url.replace(/^\s+/, '').replace(/\s+$/, '')).filter(url => /^\w+:\/\//.test(url));
             if (!links.length) {
-                api.notify('Nothing to import!');
+                await api.notify('Nothing to import!');
                 return;
             }
             const bar = await api.getBookmarksBar();
@@ -256,8 +256,8 @@
                 url: lnk,
                 title: lnk
             }));
-            api.createBookmarks(bookmarks);
-            api.notify('Bookmarks imported');
+            await api.createBookmarks(bookmarks);
+            await api.notify('Bookmarks imported');
         }
 
         function pasteURLsFromClipboard() {
@@ -292,34 +292,34 @@
 
         menu.contextMenu({
             anchor: imgMenu,
-            onOpen() {
-                refreshMenuOptions(true);
+            async onOpen() {
+                await refreshMenuOptions(true);
             },
             executeCommand: executeMenuCommand
         });
 
-        function executeMenuCommand(command) {
+        async function executeMenuCommand(command) {
             switch (command) {
                 case 'copy':
-                    copyURLsToClipboard();
+                    await copyURLsToClipboard();
                     break;
                 case 'paste':
                     pasteURLsFromClipboard();
                     break;
                 case 'delete':
-                    removeBookmarks();
+                    await removeBookmarks();
                     break;
                 case 'restore':
-                    api.sendMessage({ action: 'deleted', sendOnce: true });
+                    await api.sendMessage({ action: 'deleted', sendOnce: true });
                     break;
                 case 'settings':
-                    api.sendMessage({ action: 'settings', sendOnce: true });
+                    await api.sendMessage({ action: 'settings', sendOnce: true });
                     break;
                 case 'moveToEnd':
-                    moveToEnd();
+                    await moveToEnd();
                     break;
                 case 'moveToStart':
-                    moveToStart();
+                    await moveToStart();
                     break;
             }
         }
@@ -328,7 +328,7 @@
         imgToggleBefore.click(toggleBefore);
         imgSelectDuplicates.click(selectDuplicates);
 
-        function toggleAll(val) {
+        async function toggleAll(val) {
             const ul = tree.find('>ul');
             if (typeof (value) == 'undefined') {
                 val = 0;
@@ -338,10 +338,10 @@
                 val = val < 0;
             }
             ul.find('>li>div:nothidden>input').prop('checked', val);
-            refreshMenuOptions(true);
+            await refreshMenuOptions(true);
         }
 
-        function toggleBefore() {
+        async function toggleBefore() {
             const ul = tree.find('>ul');
             let val = 0;
             let chks = $();
@@ -355,7 +355,7 @@
             });
             val = val < 0;
             chks.prop('checked', val);
-            refreshMenuOptions(true);
+            await refreshMenuOptions(true);
         }
 
         async function selectDuplicates() {
@@ -377,8 +377,7 @@
                 chk.prop('checked', checked);
                 options.push(urlOptions);
             });
-            refreshMenuOptions(true);
-
+            await refreshMenuOptions(true);
         }
 
         async function removeBookmarks() {
@@ -412,7 +411,7 @@
                     tree.find('.selected:visible').bringIntoView({
                         parent: tree
                     });
-                    refreshMenuOptions();
+                    await refreshMenuOptions();
                 }
             });
         }
@@ -435,13 +434,13 @@
                 }
             });
             const bookmarks = await api.getBookmarksByIds(ids.map(p => p.id));
-            bookmarks.forEach(bm => {
-                bm = ApiWrapper.clone(bm);
+            for (const bookmark of bookmarks) {
+                const bm = ApiWrapper.clone(bookmark);
                 delete bm.index;
-                api.createBookmarks(bm)
-                api.removeBookmarksById([bm.id]);
-            });
-            refreshFromCurrent();
+                await api.createBookmarks(bm)
+                await api.removeBookmarksById([bm.id]);
+            };
+            await refreshFromCurrent();
         }
 
         async function moveToStart() {
@@ -463,16 +462,16 @@
             });
             const bookmarks = await api.getBookmarksByIds(ids.map(p => p.id));
             bookmarks.reverse();
-            bookmarks.forEach(bm => {
-                bm = ApiWrapper.clone(bm);
+            for (const bookmark of bookmarks) {
+                const bm = ApiWrapper.clone(bookmark);
                 bm.index = 0;
-                api.createBookmarks(bm)
-                api.removeBookmarksById([bm.id]);
-            });
-            refreshFromCurrent();
+                await api.createBookmarks(bm)
+                await api.removeBookmarksById([bm.id]);
+            };
+            await refreshFromCurrent();
         }
 
-        refresh();
+        await refresh();
 
 
     });

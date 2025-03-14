@@ -7,7 +7,7 @@
 
     let currentData;
 
-    $(() => {
+    $(async () => {
 
         const list = $('#divList', context);
         const header = $('#spnTitle', context);
@@ -103,11 +103,11 @@
             switch (command) {
                 case 'restore':
                     await restoreBookmarks();
-                    refresh();
+                    await refresh();
                     break;
                 case 'clear':
                     await removeBookmarks();
-                    refresh();
+                    await refresh();
                     break;
             }
         }
@@ -117,13 +117,13 @@
         function notifyDone() {
             if (doneTimeout)
                 clearTimeout(doneTimeout);
-            doneTimeout = setTimeout(() => {
-                api.notify('Bookmarks restored');
-                refresh();
+            doneTimeout = setTimeout(async () => {
+                await api.notify('Bookmarks restored');
+                await refresh();
             }, 500);
         }
 
-        function removeBookmarks() {
+        async function removeBookmarks() {
             let items = list.find('input[type=checkbox]:nothidden:checked');
             if (!confirm(`Are you sure you want to permanently remove ${items.length} bookmarks?`))
                 return;
@@ -135,7 +135,7 @@
                 bookmarks = bookmarks.concat(items.get().map(itm => $(itm).data('bookmark')));
             });
             const ids = bookmarks.map(bm => bm.id);
-            return api.removeDeletedBookmarksByIds(ids);
+            return await api.removeDeletedBookmarksByIds(ids);
         }
 
         async function restoreBookmarks() {
@@ -162,7 +162,7 @@
                 const bar = await api.getBookmarksBar();
                 if (!newFolder) {
                     newFolder = true;
-                    api.notify('Some parent bookmarks are missing, restoring in new folder on the bookmarks bar.');
+                    await api.notify('Some parent bookmarks are missing, restoring in new folder on the bookmarks bar.');
                 }
                 const parent = await api.createBookmarks({
                     title: 'Undeleted items',
@@ -230,7 +230,7 @@
                 refreshTimeout = setTimeout(refresh, 1000);
             });
         }
-        refresh();
+        await refresh();
 
 
     });

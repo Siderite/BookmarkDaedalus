@@ -35,79 +35,79 @@
         const settings = await api.getSettings();
         chkPrevNextContext
             .prop('checked', settings.prevNextContext)
-            .click(function () {
+            .click(async function () {
                 settings.prevNextContext = $(this).prop('checked');
-                api.setSettings(settings);
+                await api.setSettings(settings);
             });
         chkSkipButton
             .prop('checked', !settings.hideSkipButton)
-            .click(function () {
+            .click(async function () {
                 settings.hideSkipButton = !$(this).prop('checked');
-                api.setSettings(settings);
+                await api.setSettings(settings);
             });
         chkManageContext
             .prop('checked', settings.manageContext)
-            .click(function () {
+            .click(async function () {
                 settings.manageContext = $(this).prop('checked');
-                api.setSettings(settings);
+                await api.setSettings(settings);
             });
         chkReadLaterContext
             .prop('checked', settings.readLaterContext)
-            .click(function () {
+            .click(async function () {
                 settings.readLaterContext = $(this).prop('checked');
-                api.setSettings(settings);
+                await api.setSettings(settings);
             });
         chkEnableBookmarkPage
             .prop('checked', settings.enableBookmarkPage)
-            .click(function () {
+            .click(async function () {
                 settings.enableBookmarkPage = $(this).prop('checked');
                 chkConfirmBookmarkPage.prop('disabled', !settings.enableBookmarkPage);
-                api.setSettings(settings);
+                await api.setSettings(settings);
             });
         chkConfirmBookmarkPage
             .prop('disabled', !settings.enableBookmarkPage)
             .prop('checked', settings.confirmBookmarkPage)
-            .click(function () {
+            .click(async function () {
                 settings.confirmBookmarkPage = $(this).prop('checked');
-                api.setSettings(settings);
+                await api.setSettings(settings);
             });
         chkShowCurrentIndex
             .prop('checked', settings.showCurrentIndex)
-            .click(function () {
+            .click(async function () {
                 settings.showCurrentIndex = $(this).prop('checked');
-                api.setSettings(settings);
+                await api.setSettings(settings);
             });
         chkDuplicateNotifications
             .prop('checked', settings.showDuplicateNotifications)
-            .click(function () {
+            .click(async function () {
                 settings.showDuplicateNotifications = $(this).prop('checked');
-                api.setSettings(settings);
+                await api.setSettings(settings);
             });
         chkSkipPageNotBookmarkedOnNavigate
             .prop('checked', settings.skipPageNotBookmarkedOnNavigate)
-            .click(function () {
+            .click(async function () {
                 settings.skipPageNotBookmarkedOnNavigate = $(this).prop('checked');
-                api.setSettings(settings);
+                await api.setSettings(settings);
             });
         chkCleanUrls
             .prop('checked', settings.cleanUrls)
-            .click(function () {
+            .click(async function () {
                 settings.cleanUrls = $(this).prop('checked');
-                api.setSettings(settings);
+                await api.setSettings(settings);
             });
 
         let names = (settings.readLaterFolderName || 'Read Later').split(/,/);
         names = [...new Set(names)];
 
         liReadLaterFolderName
-            .on('keyup paste', () => {
+            .on('keyup paste', async () => {
                 const names = [];
                 liReadLaterFolderName.find('input[type=text]').each(function () {
                     const val = $(this).val().trim();
                     if (val) names.push(val);
                 });
                 settings.readLaterFolderName = names.join(',');
-                api.setSettings(settings);
+                await api.setSettings(settings);
             });
 
 
@@ -137,37 +137,37 @@
 
         txtReadLaterPageTimeout
             .val(settings.readLaterPageTimeout / 1000)
-            .on('keyup paste', function () {
+            .on('keyup paste', async function () {
                 settings.readLaterPageTimeout = (+($(this).val()) || 10) * 1000;
-                api.setSettings(settings);
+                await api.setSettings(settings);
             });
         chkStoreAllDeletedBookmarks
             .prop('checked', settings.storeAllDeletedBookmarks)
-            .click(function () {
+            .click(async function () {
                 settings.storeAllDeletedBookmarks = $(this).prop('checked');
-                api.setSettings(settings);
+                await api.setSettings(settings);
             });
         txtAutoClearDeleted
             .val(settings.daysAutoClearDeleted || '')
-            .on('keyup paste', function () {
+            .on('keyup paste', async function () {
                 let val = +($(this).val()) || 0;
                 if (val < 0) val = 0;
                 settings.daysAutoClearDeleted = val;
-                api.setSettings(settings);
+                await api.setSettings(settings);
             });
         chkPreloadNext
             .prop('checked', settings.preloadNext)
-            .click(function () {
+            .click(async function () {
                 settings.preloadNext = $(this).prop('checked');
-                api.setSettings(settings);
+                await api.setSettings(settings);
             });
         txtCustomUrlComparison
             .val(settings.urlComparisonSchema)
-            .on('keyup paste', function () {
+            .on('keyup paste', async function () {
                 const val = $(this).val();
                 if (ApiWrapper.isValidUrlComparisonSchema(val)) {
                     settings.urlComparisonSchema = val;
-                    api.setSettings(settings);
+                    await api.setSettings(settings);
                     txtCustomUrlComparisonInvalid.css({
                         visibility: 'hidden'
                     });
@@ -179,7 +179,7 @@
             });
 
 
-        aShortcuts.click(ev => {
+        aShortcuts.click(async ev => {
             ev.preventDefault();
             divShortcuts.show();
             const browser = ApiWrapper.getBrowser();
@@ -191,7 +191,7 @@
                 } else
                     if (browser.isOpera) {
                         divShortcutsOpera.show();
-                        api.selectOrNew('opera://settings/configureCommands');
+                        await api.selectOrNew('opera://settings/configureCommands');
                     }
         });
 

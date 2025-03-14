@@ -235,15 +235,15 @@
       self.handlers = [];
       self.notifications = {};
       if (self.chr?.tabs?.onUpdated) {
-        self.onUpdatedTab((tabId, changeInfo, tab) => {
+        self.onUpdatedTab(async (tabId, changeInfo, tab) => {
           if (changeInfo?.status == 'complete') {
-            self.pushUrlForTab(tabId, tab.url);
+            await self.pushUrlForTab(tabId, tab.url);
           }
         });
       }
       if (self.chr?.tabs?.onRemoved) {
-        self.onRemovedTab(tabId => {
-          self.clearUrlHistory(/*tabId*/);
+        self.onRemovedTab(async tabId => {
+          await self.clearUrlHistory(/*tabId*/);
         });
       }
       if (self.chr?.tabs?.onActivated) {
@@ -351,12 +351,12 @@
 
     setUrl(tabId, url) {
       const self = this;
-      const promise = new Promise((resolve, reject) => {
+      const promise = new Promise(async (resolve, reject) => {
         if (!self.chr.tabs?.update) {
           reject("This platform doesn't support the update tabs API!");
           return;
         };
-        self.pushUrlForTab(tabId, url).then(() => {
+        await self.pushUrlForTab(tabId, url).then(() => {
           self.chr.tabs.update(tabId, {
             url
           }, resolve);
@@ -824,15 +824,14 @@
         reject("This platform doesn't support the remove bookmarks API!");
         return;
       };
-      const promise = new Promise((resolve, reject) => {
-        self.getBookmarksByIds(ids).then(bms => {
-          let k = bms.length;
-          bms.forEach(bm => {
-            self.chr.bookmarks.remove(bm.id, () => {
-              k--;
-              if (k == 0)
-                resolve(bms);
-            });
+      const promise = new Promise(async (resolve, reject) => {
+        const bms = await self.getBookmarksByIds(ids);
+        let k = bms.length;
+        bms.forEach(bm => {
+          self.chr.bookmarks.remove(bm.id, () => {
+            k--;
+            if (k == 0)
+              resolve(bms);
           });
         });
       });
