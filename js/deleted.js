@@ -7,7 +7,7 @@
 
     let currentData;
 
-    $(async () => {
+    $( () => {
 
         const list = $('#divList', context);
         const header = $('#spnTitle', context);
@@ -230,7 +230,7 @@
                 refreshTimeout = setTimeout(refresh, 1000);
             });
         }
-        await refresh();
+        refresh();
 
 
     });

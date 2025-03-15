@@ -5,7 +5,7 @@
     const chrome = global.testContext && global.testContext.chrome ? global.testContext.chrome : global.chrome;
     const api = new ApiWrapper(chrome);
 
-    $(async () => {
+    $( () => {
 
         const btnPrev = $('#btnPrev', context);
         const btnSkip = $('#btnSkip', context);
@@ -77,7 +77,7 @@
             }
         }
 
-        await refresh();
+        refresh();
         api.onUpdatedTab(refresh);
 
     });

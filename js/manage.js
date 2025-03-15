@@ -7,7 +7,7 @@
 
     let currentData;
 
-    $(async () => {
+    $( () => {
 
         const api = new ApiWrapper(chrome);
 
@@ -471,7 +471,7 @@
             await refreshFromCurrent();
         }
 
-        await refresh();
+        refresh();
 
 
     });
